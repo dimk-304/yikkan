@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - POSTGRES_NAME=uz_checkpoint
+      - POSTGRES_USER=uz_user
+      - POSTGRES_PASSWORD=uz_password
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+
+  db:
+    image: postgres:17
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=uz_checkpoint
+      - POSTGRES_USER=uz_user
+      - POSTGRES_PASSWORD=uz_password
+
+volumes:
+  postgres_data:

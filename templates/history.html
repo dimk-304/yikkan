@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+
+{% block title %}Historial - Yikkan{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
+        <h2
+            style="font-size: 1.8rem; margin: 0; display: flex; align-items: center; gap: 10px; color: var(--brand-dark);">
+            <i class="bi bi-clock-history" style="color: var(--brand-primary);"></i> Historial de Asistencia
+        </h2>
+        <button onclick="exportLogs()" class="btn btn-primary">
+            <i class="bi bi-download"></i> Exportar CSV
+        </button>
+    </div>
+
+    <!-- Filtros -->
+    <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; padding: 25px; background: var(--bg-secondary); border-radius: 16px; border: 1px solid var(--border-color);">
+        <div>
+            <label
+                style="display: block; margin-bottom: 8px; color: var(--brand-dark); font-weight: 600; font-size: 0.9rem;">Empleado</label>
+            <div style="position: relative;">
+                <i class="bi bi-person"
+                    style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
+                <select id="filterEmployee"
+                    style="width: 100%; padding: 10px 10px 10px 35px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); appearance: none;">
+                    <option value="">Todos</option>
+                </select>
+                <i class="bi bi-chevron-down"
+                    style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); pointer-events: none;"></i>
+            </div>
+        </div>
+
+        <div>
+            <label
+                style="display: block; margin-bottom: 8px; color: var(--brand-dark); font-weight: 600; font-size: 0.9rem;">Fecha
+                Inicio</label>
+            <input type="date" id="filterStartDate"
+                style="width: 100%; padding: 10px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+        </div>
+
+        <div>
+            <label
+                style="display: block; margin-bottom: 8px; color: var(--brand-dark); font-weight: 600; font-size: 0.9rem;">Fecha
+                Fin</label>
+            <input type="date" id="filterEndDate"
+                style="width: 100%; padding: 10px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+        </div>
+
+        <div>
+            <label
+                style="display: block; margin-bottom: 8px; color: var(--brand-dark); font-weight: 600; font-size: 0.9rem;">Tipo</label>
+            <div style="position: relative;">
+                <i class="bi bi-filter"
+                    style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
+                <select id="filterType"
+                    style="width: 100%; padding: 10px 10px 10px 35px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); appearance: none;">
+                    <option value="">Todos</option>
+                    <option value="CHECK_IN">Entrada</option>
+                    <option value="CHECK_OUT">Salida</option>
+                </select>
+                <i class="bi bi-chevron-down"
+                    style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); pointer-events: none;"></i>
+            </div>
+        </div>
+
+        <div style="display: flex; align-items: flex-end;">
+            <button onclick="applyFilters()" class="btn btn-primary" style="width: 100%;">
+                <i class="bi bi-funnel"></i> Filtrar
+            </button>
+        </div>
+    </div>
+
+    <div id="logsTable" style="overflow-x: auto; border-radius: 12px; border: 1px solid var(--border-color);">
+        <p style="color: var(--text-secondary); text-align: center; padding: 40px;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let logs = [];
+    let employees = [];
+
+    async function loadEmployees() {
+        try {
+            const response = await fetch('/api/employees/');
+            if (response.ok) {
+                employees = await response.json();
+                const select = document.getElementById('filterEmployee');
+                select.innerHTML = '<option value="">Todos</option>' +
+                    employees.map(emp => `<option value="${emp.id}">${emp.first_name} ${emp.last_name}</option>`).join('');
+            }
+        } catch (error) {
+            console.error('Error loading employees:', error);
+        }
+    }
+
+    async function loadLogs(filters = {}) {
+        try {
+            let url = '/api/logs/?';
+            const params = new URLSearchParams();
+
+            if (filters.employee_id) params.append('employee_id', filters.employee_id);
+            if (filters.start_date) params.append('start_date', filters.start_date);
+            if (filters.end_date) params.append('end_date', filters.end_date);
+            if (filters.type) params.append('type', filters.type);
+
+            const response = await fetch(url + params.toString());
+            if (response.ok) {
+                logs = await response.json();
+                renderTable();
+            }
+        } catch (error) {
+            console.error('Error loading logs:', error);
+        }
+    }
+
+    function renderTable() {
+        const container = document.getElementById('logsTable');
+
+        if (logs.length === 0) {
+            container.innerHTML = `
+                <div style="padding: 40px; text-align: center; color: var(--text-secondary);">
+                    <i class="bi bi-calendar-x" style="font-size: 2rem; display: block; margin-bottom: 10px;"></i>
+                    No se encontraron registros
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = `
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead style="background: var(--bg-secondary);">
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <th style="padding: 16px; text-align: left; color: var(--text-secondary); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">Empleado</th>
+                        <th style="padding: 16px; text-align: left; color: var(--text-secondary); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">ID Empleado</th>
+                        <th style="padding: 16px; text-align: left; color: var(--text-secondary); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">Tipo</th>
+                        <th style="padding: 16px; text-align: left; color: var(--text-secondary); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">Fecha y Hora</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${logs.map(log => {
+            const isCheckIn = log.type === 'CHECK_IN';
+            const typeIcon = isCheckIn ? '<i class="bi bi-box-arrow-in-right"></i>' : '<i class="bi bi-box-arrow-right"></i>';
+            const typeText = isCheckIn ? 'Entrada' : 'Salida';
+            const typeClass = isCheckIn ? 'text-success' : 'text-danger';
+            const typeBg = isCheckIn ? 'rgba(42, 209, 159, 0.1)' : 'rgba(255, 79, 79, 0.1)';
+            const typeColor = isCheckIn ? 'var(--success)' : 'var(--error)';
+
+            return `
+                            <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.2s;">
+                                <td style="padding: 15px; font-weight: 500; color: var(--brand-dark);">${log.employee_name}</td>
+                                <td style="padding: 15px; color: var(--text-secondary); font-family: monospace;">${log.employee_id}</td>
+                                <td style="padding: 15px;">
+                                    <span style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; background: ${typeBg}; color: ${typeColor}; border: 1px solid ${typeBg};">
+                                        ${typeIcon} ${typeText}
+                                    </span>
+                                </td>
+                                <td style="padding: 15px; color: var(--text-secondary); font-size: 0.95rem;">
+                                    <i class="bi bi-calendar3" style="margin-right: 5px;"></i>
+                                    ${new Date(log.timestamp).toLocaleString('es-MX', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            })}
+                                </td>
+                            </tr>
+                        `;
+        }).join('')}
+                </tbody>
+            </table>
+        `;
+    }
+
+    function applyFilters() {
+        const filters = {
+            employee_id: document.getElementById('filterEmployee').value,
+            start_date: document.getElementById('filterStartDate').value,
+            end_date: document.getElementById('filterEndDate').value,
+            type: document.getElementById('filterType').value
+        };
+
+        loadLogs(filters);
+    }
+
+    function exportLogs() {
+        const filters = {
+            employee_id: document.getElementById('filterEmployee').value,
+            start_date: document.getElementById('filterStartDate').value,
+            end_date: document.getElementById('filterEndDate').value,
+        };
+
+        let url = '/api/logs/export/?';
+        const params = new URLSearchParams();
+
+        if (filters.employee_id) params.append('employee_id', filters.employee_id);
+        if (filters.start_date) params.append('start_date', filters.start_date);
+        if (filters.end_date) params.append('end_date', filters.end_date);
+
+        window.location.href = url + params.toString();
+    }
+
+    // Cargar datos al iniciar
+    loadEmployees();
+    loadLogs();
+</script>
+{% endblock %}

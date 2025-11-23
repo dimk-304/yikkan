@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Yikkan{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="margin-bottom: 30px;">
+        <h2 style="font-size: 1.8rem; margin-bottom: 5px;"><i class="bi bi-speedometer2"></i> Dashboard Administrativo
+        </h2>
+    </div>
+
+    <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 40px;">
+        <!-- Tarjeta Empleados -->
+        <div class="card"
+            style="background: var(--bg-secondary); border: 1px solid var(--border-color); padding: 20px; margin-bottom: 0;">
+            <div style="font-size: 2rem; margin-bottom: 10px; color: var(--brand-primary);"><i
+                    class="bi bi-people-fill"></i></div>
+            <h3
+                style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em;">
+                Empleados Activos</h3>
+            <p id="totalEmployees"
+                style="font-size: 2.2rem; font-weight: 700; color: var(--brand-dark); margin-bottom: 0;">-</p>
+        </div>
+
+        <!-- Tarjeta Registros Hoy -->
+        <div class="card"
+            style="background: var(--bg-secondary); border: 1px solid var(--border-color); padding: 20px; margin-bottom: 0;">
+            <div style="font-size: 2rem; margin-bottom: 10px; color: var(--success);"><i
+                    class="bi bi-check-circle-fill"></i></div>
+            <h3
+                style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em;">
+                Registros Hoy</h3>
+            <p id="logsToday" style="font-size: 2.2rem; font-weight: 700; color: var(--brand-dark); margin-bottom: 0;">-
+            </p>
+        </div>
+
+        <!-- Tarjeta Presentes -->
+        <div class="card"
+            style="background: var(--bg-secondary); border: 1px solid var(--border-color); padding: 20px; margin-bottom: 0;">
+            <div style="font-size: 2rem; margin-bottom: 10px; color: var(--warning);"><i
+                    class="bi bi-person-check-fill"></i></div>
+            <h3
+                style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em;">
+                Presentes Hoy</h3>
+            <p id="checkedInToday"
+                style="font-size: 2.2rem; font-weight: 700; color: var(--brand-dark); margin-bottom: 0;">-</p>
+        </div>
+
+        <!-- Tarjeta Total Registros -->
+        <div class="card"
+            style="background: var(--bg-secondary); border: 1px solid var(--border-color); padding: 20px; margin-bottom: 0;">
+            <div style="font-size: 2rem; margin-bottom: 10px; color: var(--brand-dark);"><i
+                    class="bi bi-clipboard-data-fill"></i></div>
+            <h3
+                style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em;">
+                Total Histórico</h3>
+            <p id="totalLogs" style="font-size: 2.2rem; font-weight: 700; color: var(--brand-dark); margin-bottom: 0;">-
+            </p>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+        <a href="/employees/management" style="text-decoration: none;">
+            <div class="card"
+                style="cursor: pointer; transition: all 0.2s ease; height: 100%; border: 1px solid var(--border-color); margin-bottom: 0;">
+                <div style="font-size: 2.5rem; margin-bottom: 15px; color: var(--brand-primary);"><i
+                        class="bi bi-person-badge"></i></div>
+                <h3 style="margin-bottom: 10px; color: var(--brand-dark);">Gestión de Empleados</h3>
+                <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 0;">
+                    Administrar empleados, jerarquía organizacional y credenciales
+                </p>
+            </div>
+        </a>
+
+        <a href="/history" style="text-decoration: none;">
+            <div class="card"
+                style="cursor: pointer; transition: all 0.2s ease; height: 100%; border: 1px solid var(--border-color); margin-bottom: 0;">
+                <div style="font-size: 2.5rem; margin-bottom: 15px; color: var(--brand-dark);"><i
+                        class="bi bi-clock-history"></i></div>
+                <h3 style="margin-bottom: 10px; color: var(--brand-dark);">Historial Completo</h3>
+                <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 0;">
+                    Ver y filtrar todos los registros de asistencia
+                </p>
+            </div>
+        </a>
+
+        <a href="/network/" style="text-decoration: none;">
+            <div class="card"
+                style="cursor: pointer; transition: all 0.2s ease; height: 100%; border: 1px solid var(--border-color); margin-bottom: 0;">
+                <div style="font-size: 2.5rem; margin-bottom: 15px; color: var(--success);"><i
+                        class="bi bi-chat-dots"></i></div>
+                <h3 style="margin-bottom: 10px; color: var(--brand-dark);">Red Social</h3>
+                <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 0;">
+                    Publicar avisos y compartir información con el equipo
+                </p>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 30px;">
+    <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;"><i class="bi bi-list-ul"
+            style="color: var(--brand-primary);"></i> Últimos Registros</h3>
+    <div id="recentLogs">
+        <p style="color: var(--text-secondary); text-align: center; padding: 20px;">Cargando...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Cargar información del usuario
+    async function loadUser() {
+        try {
+            const response = await fetch('/api/me/');
+            if (response.ok) {
+                const user = await response.json();
+                document.getElementById('userName').textContent = `${user.first_name} ${user.last_name} (${user.role === 'ADMIN' ? 'Administrador' : 'Empleado'})`;
+            } else {
+                window.location.href = '/login';
+            }
+        } catch (error) {
+            console.error('Error loading user:', error);
+        }
+    }
+
+    // Logout
+    async function logout() {
+        try {
+            await fetch('/api/logout/', { method: 'POST' });
+            window.location.href = '/login';
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    // Cargar estadísticas
+    async function loadStats() {
+        try {
+            const response = await fetch('/api/stats/');
+            if (response.ok) {
+                const stats = await response.json();
+                document.getElementById('totalEmployees').textContent = stats.total_employees;
+                document.getElementById('logsToday').textContent = stats.total_logs_today;
+                document.getElementById('checkedInToday').textContent = stats.employees_checked_in_today;
+                document.getElementById('totalLogs').textContent = stats.total_logs;
+            }
+        } catch (error) {
+            console.error('Error loading stats:', error);
+        }
+    }
+
+    // Cargar registros recientes
+    async function loadRecentLogs() {
+        try {
+            const response = await fetch('/api/logs/recent/');
+            if (response.ok) {
+                const logs = await response.json();
+                const container = document.getElementById('recentLogs');
+
+                if (logs.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">No hay registros recientes</p>';
+                } else {
+                    container.innerHTML = logs.map(log => {
+                        const typeIcon = log.type === 'CHECK_IN' ? '<i class="bi bi-box-arrow-in-right" style="color: var(--success);"></i>' : '<i class="bi bi-box-arrow-right" style="color: var(--error);"></i>';
+                        const typeText = log.type === 'CHECK_IN' ? 'Entrada' : 'Salida';
+                        return `
+                            <div style="padding: 15px; background: var(--bg-secondary); border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border-color); transition: all 0.2s ease;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <div style="width: 40px; height: 40px; border-radius: 50%; background: ${log.type === 'CHECK_IN' ? 'rgba(42, 209, 159, 0.1)' : 'rgba(255, 79, 79, 0.1)'}; display: flex; align-items: center; justify-content: center;">
+                                            ${typeIcon}
+                                        </div>
+                                        <div>
+                                            <strong style="color: var(--brand-dark); font-size: 0.95rem;">${log.employee_name}</strong>
+                                            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0;">
+                                                ${typeText}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div style="text-align: right; color: var(--text-secondary); font-size: 0.85rem; font-weight: 500;">
+                                        ${new Date(log.timestamp).toLocaleString('es-MX', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
+        } catch (error) {
+            console.error('Error loading recent logs:', error);
+        }
+    }
+
+    // Cargar datos al iniciar
+    loadUser();
+    loadStats();
+    loadRecentLogs();
+
+    // Actualizar cada 30 segundos
+    setInterval(() => {
+        loadStats();
+        loadRecentLogs();
+    }, 30000);
+</script>
+{% endblock %}

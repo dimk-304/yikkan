@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+
+{% block title %}Empleados - Yikkan{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
+        <h2 style="font-size: 1.8rem; margin: 0; display: flex; align-items: center; gap: 10px;">
+            <i class="bi bi-people-fill" style="color: var(--brand-primary);"></i> Gestión de Empleados
+        </h2>
+        <div style="display: flex; gap: 10px;">
+            <div style="position: relative;">
+                <i class="bi bi-search"
+                    style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
+                <input type="text" id="searchInput" placeholder="Buscar empleado..." style="padding-left: 35px;">
+            </div>
+            <button onclick="window.location.href='/register'" class="btn btn-primary">
+                <i class="bi bi-person-plus"></i> Nuevo Empleado
+            </button>
+        </div>
+    </div>
+
+    <div id="employeesTable" style="overflow-x: auto; border-radius: 12px; border: 1px solid var(--border-color);">
+        <p style="color: var(--text-secondary); text-align: center; padding: 40px;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+        </p>
+    </div>
+</div>
+
+<!-- Modal para editar empleado -->
+<div id="editModal" class="hidden"
+    style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 30, 57, 0.5); backdrop-filter: blur(4px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px;">
+    <div class="card"
+        style="max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; background: var(--bg-primary); border: 1px solid var(--border-color); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);">
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">
+            <h3 style="margin: 0; color: var(--brand-dark);"><i class="bi bi-pencil-square"></i> Editar Empleado</h3>
+            <button onclick="closeModal()"
+                style="background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; transition: color 0.2s;">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <form id="editForm">
+            <input type="hidden" id="employeeId">
+
+            <div class="form-group">
+                <label>Nombre</label>
+                <input type="text" id="editFirstName" required>
+            </div>
+
+            <div class="form-group">
+                <label>Apellido</label>
+                <input type="text" id="editLastName" required>
+            </div>
+
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="editEmail" required>
+            </div>
+
+            <div class="form-group">
+                <label>ID Empleado</label>
+                <input type="text" id="editEmployeeId" required>
+            </div>
+
+            <h4
+                style="margin: 25px 0 15px 0; color: var(--brand-primary); font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+                <i class="bi bi-clock"></i> Horarios
+            </h4>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="form-group">
+                    <label>Hora de Entrada</label>
+                    <input type="time" id="editWorkStart">
+                </div>
+
+                <div class="form-group">
+                    <label>Hora de Salida</label>
+                    <input type="time" id="editWorkEnd">
+                </div>
+
+                <div class="form-group">
+                    <label>Inicio de Comida</label>
+                    <input type="time" id="editLunchStart">
+                </div>
+
+                <div class="form-group">
+                    <label>Fin de Comida</label>
+                    <input type="time" id="editLunchEnd">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 15px;">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    <input type="checkbox" id="editIsActive"
+                        style="width: 20px; height: 20px; accent-color: var(--brand-primary);">
+                    <span style="color: var(--text-primary);">Empleado Activo</span>
+                </label>
+            </div>
+
+            <div
+                style="display: flex; gap: 10px; margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">
+                    <i class="bi bi-check-circle"></i> Guardar Cambios
+                </button>
+                <button type="button" onclick="closeModal()" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Cancelar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let employees = [];
+    let searchTimeout;
+
+    const searchInput = document.getElementById('searchInput');
+    const editModal = document.getElementById('editModal');
+    const editForm = document.getElementById('editForm');
+    const alertContainer = document.getElementById('alertContainer');
+
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            loadEmployees(e.target.value);
+        }, 300);
+    });
+
+    async function loadEmployees(search = '') {
+        try {
+            let url = '/api/employees/?active_only=false';
+            if (search) {
+                url += `&search=${encodeURIComponent(search)}`;
+            }
+
+            const response = await fetch(url);
+            if (response.ok) {
+                employees = await response.json();
+                renderTable();
+            }
+        } catch (error) {
+            console.error('Error loading employees:', error);
+        }
+    }
+
+    function renderTable() {
+        const container = document.getElementById('employeesTable');
+
+        if (employees.length === 0) {
+            container.innerHTML = `
+                <div style="padding: 40px; text-align: center; color: var(--text-secondary);">
+                    <i class="bi bi-inbox" style="font-size: 2rem; display: block; margin-bottom: 10px;"></i>
+                    No se encontraron empleados
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = `
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead style="background: var(--bg-secondary);">
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <th style="padding: 16px; text-align: left; color: var(--text-secondary); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">Nombre</th>
+                        <th style="padding: 16px; text-align: left; color: var(--text-secondary); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">ID</th>
+                        <th style="padding: 16px; text-align: left; color: var(--text-secondary); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">Email</th>
+                        <th style="padding: 16px; text-align: left; color: var(--text-secondary); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">Horario</th>
+                        <th style="padding: 16px; text-align: left; color: var(--text-secondary); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">Estado</th>
+                        <th style="padding: 16px; text-align: left; color: var(--text-secondary); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">Registros</th>
+                        <th style="padding: 16px; text-align: center; color: var(--text-secondary); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${employees.map(emp => `
+                        <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.2s;">
+                            <td style="padding: 15px; font-weight: 500; color: var(--brand-dark);">${emp.first_name} ${emp.last_name}</td>
+                            <td style="padding: 15px; color: var(--text-secondary); font-family: monospace;">${emp.employee_id}</td>
+                            <td style="padding: 15px; color: var(--text-secondary); font-size: 0.9rem;">${emp.email}</td>
+                            <td style="padding: 15px; color: var(--text-secondary); font-size: 0.9rem;">
+                                ${emp.work_start_time && emp.work_end_time ?
+                `<span style="display: flex; align-items: center; gap: 5px;"><i class="bi bi-clock"></i> ${emp.work_start_time} - ${emp.work_end_time}</span>` :
+                '<span style="color: var(--warning); display: flex; align-items: center; gap: 5px;"><i class="bi bi-exclamation-circle"></i> Sin configurar</span>'}
+                            </td>
+                            <td style="padding: 15px;">
+                                <span style="padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; background: ${emp.is_active ? 'rgba(42, 209, 159, 0.1)' : 'rgba(255, 79, 79, 0.1)'}; color: ${emp.is_active ? 'var(--success)' : 'var(--error)'}; border: 1px solid ${emp.is_active ? 'rgba(42, 209, 159, 0.2)' : 'rgba(255, 79, 79, 0.2)'};">
+                                    ${emp.is_active ? 'Activo' : 'Inactivo'}
+                                </span>
+                            </td>
+                            <td style="padding: 15px; color: var(--text-secondary);">${emp.total_logs}</td>
+                            <td style="padding: 15px; text-align: center;">
+                                <button onclick="editEmployee(${emp.id})" class="btn btn-secondary" style="padding: 8px 12px; font-size: 0.9rem;">
+                                    <i class="bi bi-pencil"></i> Editar
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+    }
+
+    async function editEmployee(id) {
+        try {
+            const response = await fetch(`/api/employees/${id}/`);
+            if (response.ok) {
+                const employee = await response.json();
+
+                document.getElementById('employeeId').value = employee.id;
+                document.getElementById('editFirstName').value = employee.first_name;
+                document.getElementById('editLastName').value = employee.last_name;
+                document.getElementById('editEmail').value = employee.email;
+                document.getElementById('editEmployeeId').value = employee.employee_id;
+                document.getElementById('editWorkStart').value = employee.work_start_time || '';
+                document.getElementById('editWorkEnd').value = employee.work_end_time || '';
+                document.getElementById('editLunchStart').value = employee.lunch_start_time || '';
+                document.getElementById('editLunchEnd').value = employee.lunch_end_time || '';
+                document.getElementById('editIsActive').checked = employee.is_active;
+
+                editModal.classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error('Error loading employee:', error);
+        }
+    }
+
+    function closeModal() {
+        editModal.classList.add('hidden');
+        editForm.reset();
+        alertContainer.innerHTML = '';
+    }
+
+    editForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const id = document.getElementById('employeeId').value;
+        const data = {
+            first_name: document.getElementById('editFirstName').value,
+            last_name: document.getElementById('editLastName').value,
+            email: document.getElementById('editEmail').value,
+            employee_id: document.getElementById('editEmployeeId').value,
+            work_start_time: document.getElementById('editWorkStart').value || null,
+            work_end_time: document.getElementById('editWorkEnd').value || null,
+            lunch_start_time: document.getElementById('editLunchStart').value || null,
+            lunch_end_time: document.getElementById('editLunchEnd').value || null,
+            is_active: document.getElementById('editIsActive').checked
+        };
+
+        try {
+            const response = await fetch(`/api/employees/${id}/`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                alertContainer.innerHTML = '<div class="alert alert-success"><i class="bi bi-check-circle"></i> Empleado actualizado exitosamente</div>';
+                setTimeout(() => {
+                    closeModal();
+                    loadEmployees();
+                }, 1500);
+            } else {
+                const error = await response.json();
+                alertContainer.innerHTML = `<div class="alert alert-error"><i class="bi bi-exclamation-triangle"></i> Error: ${JSON.stringify(error)}</div>`;
+            }
+        } catch (error) {
+            alertContainer.innerHTML = `<div class="alert alert-error"><i class="bi bi-wifi-off"></i> Error de conexión</div>`;
+        }
+    });
+
+    // Cargar empleados al iniciar
+    loadEmployees();
+</script>
+{% endblock %}

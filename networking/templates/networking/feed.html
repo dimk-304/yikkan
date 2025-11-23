@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}Red Social - uz-checkpoint{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
+        <div>
+            <h2 style="font-size: 1.8rem; margin-bottom: 5px;"><i class="bi bi-chat-dots"></i> Red Social</h2>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">Comparte avisos y publicaciones con el equipo
+            </p>
+        </div>
+        <a href="/dashboard" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Volver al Dashboard</a>
+    </div>
+
+    <!-- Formulario para crear publicación -->
+    <div class="card"
+        style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05)); margin-bottom: 30px;">
+        <h3 style="margin-bottom: 20px;"><i class="bi bi-pencil-square"></i> Nueva Publicación</h3>
+        <form method="post" action="{% url 'networking:create' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div style="margin-bottom: 20px;">
+                <label for="id_content" style="display: block; margin-bottom: 8px; font-weight: 500;">
+                    {{ form.content.label }}
+                </label>
+                {{ form.content }}
+                {% if form.content.errors %}
+                <div style="color: var(--error); font-size: 0.9rem; margin-top: 5px;">
+                    {{ form.content.errors }}
+                </div>
+                {% endif %}
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label for="id_image" style="display: block; margin-bottom: 8px; font-weight: 500;">
+                    {{ form.image.label }}
+                </label>
+                {{ form.image }}
+                {% if form.image.errors %}
+                <div style="color: var(--error); font-size: 0.9rem; margin-top: 5px;">
+                    {{ form.image.errors }}
+                </div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-send"></i> Publicar
+            </button>
+        </form>
+    </div>
+
+    <!-- Feed de publicaciones -->
+    <div>
+        <h3 style="margin-bottom: 20px;"><i class="bi bi-list-ul"></i> Publicaciones Recientes</h3>
+
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}"
+            style="margin-bottom: 20px; padding: 15px; border-radius: 12px; background: {% if message.tags == 'success' %}rgba(16, 185, 129, 0.1){% elif message.tags == 'error' %}rgba(239, 68, 68, 0.1){% else %}rgba(99, 102, 241, 0.1){% endif %}; border: 1px solid {% if message.tags == 'success' %}var(--success){% elif message.tags == 'error' %}var(--error){% else %}var(--accent-primary){% endif %};">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        {% if posts %}
+        {% for post in posts %}
+        <div class="card" style="margin-bottom: 20px; background: rgba(255, 255, 255, 0.02);">
+            <!-- Header del post -->
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div
+                        style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                        {{ post.author.first_name|slice:":1"|upper }}
+                    </div>
+                    <div>
+                        <strong style="display: block;">{{ post.author.get_full_name }}</strong>
+                        <small style="color: var(--text-secondary); font-size: 0.85rem;">
+                            <i class="bi bi-clock"></i> {{ post.created_at|date:"d/m/Y H:i" }}
+                        </small>
+                    </div>
+                </div>
+
+                {% if current_employee and (post.author == current_employee or employee_role == 'ADMIN') %}
+                <form method="post" action="{% url 'networking:delete' post.id %}" style="display: inline;"
+                    onsubmit="return confirm('¿Estás seguro de eliminar esta publicación?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-secondary" style="padding: 8px 12px; font-size: 0.9rem;">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+
+            <!-- Contenido del post -->
+            <div style="margin-bottom: 15px;">
+                <p style="white-space: pre-wrap; line-height: 1.6;">{{ post.content }}</p>
+            </div>
+
+            <!-- Imagen si existe -->
+            {% if post.image %}
+            <div style="margin-bottom: 15px;">
+                <img src="{{ post.image.url }}" alt="Imagen de publicación"
+                    style="max-width: 100%; border-radius: 12px; border: 1px solid var(--border-color);">
+            </div>
+            {% endif %}
+
+            <!-- Footer del post -->
+            <div
+                style="padding-top: 15px; border-top: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.85rem;">
+                {% if post.updated_at != post.created_at %}
+                <i class="bi bi-pencil"></i> Editado: {{ post.updated_at|date:"d/m/Y H:i" }}
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="card" style="text-align: center; padding: 40px;">
+            <i class="bi bi-inbox" style="font-size: 3rem; color: var(--text-secondary); margin-bottom: 15px;"></i>
+            <p style="color: var(--text-secondary); font-size: 1.1rem;">No hay publicaciones aún</p>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">¡Sé el primero en publicar algo!</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,368 @@
+{% extends 'base.html' %}
+
+{% block title %}Mi Panel - Yikkan{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
+        <div>
+            <h2
+                style="font-size: 1.8rem; margin-bottom: 5px; display: flex; align-items: center; gap: 10px; color: var(--brand-dark);">
+                <i class="bi bi-person-circle" style="color: var(--brand-primary);"></i> Mi Panel
+            </h2>
+            <p id="employeeName" style="color: var(--text-secondary); font-size: 1.1rem;"></p>
+        </div>
+        <button onclick="logout()" class="btn btn-secondary">
+            <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+        </button>
+    </div>
+
+    <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px;">
+        <div class="card"
+            style="background: linear-gradient(135deg, rgba(58, 107, 255, 0.05), rgba(15, 30, 57, 0.05)); border: 1px solid rgba(58, 107, 255, 0.2); transition: transform 0.2s;">
+            <h3
+                style="margin-bottom: 15px; color: var(--brand-primary); display: flex; align-items: center; gap: 10px;">
+                <i class="bi bi-exclamation-circle-fill"></i> Reportar Incidencia
+            </h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 0.9rem;">
+                Reporta faltas, retardos u otras incidencias laborales.
+            </p>
+            <button onclick="showIncidentForm()" class="btn btn-primary" style="width: 100%;">
+                <i class="bi bi-plus-circle"></i> Nueva Incidencia
+            </button>
+        </div>
+
+        <div class="card"
+            style="background: linear-gradient(135deg, rgba(42, 209, 159, 0.05), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(42, 209, 159, 0.2); transition: transform 0.2s;">
+            <h3 style="margin-bottom: 15px; color: var(--success); display: flex; align-items: center; gap: 10px;">
+                <i class="bi bi-calendar-check-fill"></i> Solicitar Permiso
+            </h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 0.9rem;">
+                Solicita vacaciones, días personales o permisos por enfermedad.
+            </p>
+            <button onclick="showLeaveForm()" class="btn btn-primary"
+                style="width: 100%; background: var(--success); border-color: var(--success);">
+                <i class="bi bi-plus-circle"></i> Nuevo Permiso
+            </button>
+        </div>
+
+        <a href="/network/" style="text-decoration: none;">
+            <div class="card"
+                style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), rgba(217, 119, 6, 0.05)); border: 1px solid rgba(245, 158, 11, 0.2); cursor: pointer; transition: all 0.2s ease; height: 100%;">
+                <h3 style="margin-bottom: 15px; color: #f59e0b; display: flex; align-items: center; gap: 10px;">
+                    <i class="bi bi-chat-dots-fill"></i> Red Social
+                </h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                    Ver avisos importantes y publicaciones del equipo.
+                </p>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Formulario de Incidencia -->
+<div id="incidentFormCard" class="card hidden" style="margin-top: 20px; border: 1px solid var(--brand-primary);">
+    <h3 style="margin-bottom: 20px; color: var(--brand-primary); display: flex; align-items: center; gap: 10px;">
+        <i class="bi bi-file-earmark-text"></i> Nueva Incidencia
+    </h3>
+    <div id="incidentAlert"></div>
+    <form id="incidentForm">
+        <div class="form-group">
+            <label>Fecha</label>
+            <input type="date" id="incidentDate" required>
+        </div>
+        <div class="form-group">
+            <label>Tipo</label>
+            <div style="position: relative;">
+                <select id="incidentType"
+                    style="width: 100%; padding: 14px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-primary); appearance: none;">
+                    <option value="ABSENCE">Falta</option>
+                    <option value="LATE">Retardo</option>
+                    <option value="EARLY_LEAVE">Salida Temprana</option>
+                    <option value="OTHER">Otro</option>
+                </select>
+                <i class="bi bi-chevron-down"
+                    style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); pointer-events: none;"></i>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Descripción</label>
+            <textarea id="incidentDescription" rows="4" required
+                style="width: 100%; padding: 14px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-primary); font-family: 'Inter', sans-serif; resize: vertical;"></textarea>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;"><i class="bi bi-send"></i> Enviar</button>
+            <button type="button" onclick="hideIncidentForm()" class="btn btn-secondary">Cancelar</button>
+        </div>
+    </form>
+</div>
+
+<!-- Formulario de Permiso -->
+<div id="leaveFormCard" class="card hidden" style="margin-top: 20px; border: 1px solid var(--success);">
+    <h3 style="margin-bottom: 20px; color: var(--success); display: flex; align-items: center; gap: 10px;">
+        <i class="bi bi-calendar-event"></i> Nueva Solicitud de Permiso
+    </h3>
+    <div id="leaveAlert"></div>
+    <form id="leaveForm">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div class="form-group">
+                <label>Fecha Inicio</label>
+                <input type="date" id="leaveStartDate" required>
+            </div>
+            <div class="form-group">
+                <label>Fecha Fin</label>
+                <input type="date" id="leaveEndDate" required>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Tipo</label>
+            <div style="position: relative;">
+                <select id="leaveType"
+                    style="width: 100%; padding: 14px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-primary); appearance: none;">
+                    <option value="VACATION">Vacaciones</option>
+                    <option value="PERSONAL">Día Personal</option>
+                    <option value="SICK">Enfermedad</option>
+                    <option value="OTHER">Otro</option>
+                </select>
+                <i class="bi bi-chevron-down"
+                    style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); pointer-events: none;"></i>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Motivo</label>
+            <textarea id="leaveReason" rows="4" required
+                style="width: 100%; padding: 14px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-primary); font-family: 'Inter', sans-serif; resize: vertical;"></textarea>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button type="submit" class="btn btn-primary"
+                style="flex: 1; background: var(--success); border-color: var(--success);"><i class="bi bi-send"></i>
+                Enviar</button>
+            <button type="button" onclick="hideLeaveForm()" class="btn btn-secondary">Cancelar</button>
+        </div>
+    </form>
+</div>
+
+<!-- Mis Solicitudes -->
+<div class="card" style="margin-top: 30px;">
+    <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px; color: var(--brand-dark);">
+        <i class="bi bi-list-check"></i> Mis Solicitudes
+    </h3>
+
+    <h4
+        style="margin: 25px 0 15px 0; color: var(--brand-primary); font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+        <i class="bi bi-exclamation-triangle"></i> Incidencias
+    </h4>
+    <div id="incidentsList"></div>
+
+    <h4
+        style="margin: 35px 0 15px 0; color: var(--success); font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+        <i class="bi bi-calendar2-week"></i> Permisos
+    </h4>
+    <div id="leavesList"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Cargar datos del usuario
+    async function loadUser() {
+        try {
+            const response = await fetch('/api/me/');
+            if (response.ok) {
+                const user = await response.json();
+                document.getElementById('employeeName').textContent = `${user.first_name} ${user.last_name}`;
+            } else {
+                window.location.href = '/login';
+            }
+        } catch (error) {
+            console.error('Error loading user:', error);
+        }
+    }
+
+    // Logout
+    async function logout() {
+        try {
+            await fetch('/api/logout/', { method: 'POST' });
+            window.location.href = '/login';
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    // Mostrar/ocultar formularios
+    function showIncidentForm() {
+        document.getElementById('incidentFormCard').classList.remove('hidden');
+        document.getElementById('leaveFormCard').classList.add('hidden');
+        // Scroll to form
+        document.getElementById('incidentFormCard').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function hideIncidentForm() {
+        document.getElementById('incidentFormCard').classList.add('hidden');
+        document.getElementById('incidentForm').reset();
+    }
+
+    function showLeaveForm() {
+        document.getElementById('leaveFormCard').classList.remove('hidden');
+        document.getElementById('incidentFormCard').classList.add('hidden');
+        // Scroll to form
+        document.getElementById('leaveFormCard').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function hideLeaveForm() {
+        document.getElementById('leaveFormCard').classList.add('hidden');
+        document.getElementById('leaveForm').reset();
+    }
+
+    // Enviar incidencia
+    document.getElementById('incidentForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const data = {
+            date: document.getElementById('incidentDate').value,
+            type: document.getElementById('incidentType').value,
+            description: document.getElementById('incidentDescription').value
+        };
+
+        try {
+            const response = await fetch('/api/incidents/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                document.getElementById('incidentAlert').innerHTML = '<div class="alert alert-success"><i class="bi bi-check-circle"></i> Incidencia enviada</div>';
+                setTimeout(() => {
+                    hideIncidentForm();
+                    loadIncidents();
+                    document.getElementById('incidentAlert').innerHTML = '';
+                }, 2000);
+            } else {
+                document.getElementById('incidentAlert').innerHTML = '<div class="alert alert-error"><i class="bi bi-x-circle"></i> Error al enviar</div>';
+            }
+        } catch (error) {
+            document.getElementById('incidentAlert').innerHTML = '<div class="alert alert-error"><i class="bi bi-exclamation-triangle"></i> Error de conexión</div>';
+        }
+    });
+
+    // Enviar permiso
+    document.getElementById('leaveForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const data = {
+            start_date: document.getElementById('leaveStartDate').value,
+            end_date: document.getElementById('leaveEndDate').value,
+            type: document.getElementById('leaveType').value,
+            reason: document.getElementById('leaveReason').value
+        };
+
+        try {
+            const response = await fetch('/api/leave-requests/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                document.getElementById('leaveAlert').innerHTML = '<div class="alert alert-success"><i class="bi bi-check-circle"></i> Permiso solicitado</div>';
+                setTimeout(() => {
+                    hideLeaveForm();
+                    loadLeaveRequests();
+                    document.getElementById('leaveAlert').innerHTML = '';
+                }, 2000);
+            } else {
+                document.getElementById('leaveAlert').innerHTML = '<div class="alert alert-error"><i class="bi bi-x-circle"></i> Error al enviar</div>';
+            }
+        } catch (error) {
+            document.getElementById('leaveAlert').innerHTML = '<div class="alert alert-error"><i class="bi bi-exclamation-triangle"></i> Error de conexión</div>';
+        }
+    });
+
+    // Cargar incidencias
+    async function loadIncidents() {
+        try {
+            const response = await fetch('/api/incidents/');
+            if (response.ok) {
+                const incidents = await response.json();
+                const container = document.getElementById('incidentsList');
+
+                if (incidents.length === 0) {
+                    container.innerHTML = `
+                        <div style="padding: 20px; text-align: center; color: var(--text-secondary); background: var(--bg-secondary); border-radius: 12px; border: 1px dashed var(--border-color);">
+                            <i class="bi bi-check2-circle" style="font-size: 1.5rem; display: block; margin-bottom: 5px;"></i>
+                            No hay incidencias registradas
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = incidents.map(inc => `
+                        <div style="padding: 20px; background: var(--bg-primary); border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border-color); box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                            <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 10px;">
+                                <div>
+                                    <strong style="color: var(--brand-dark); font-size: 1.05rem;">${inc.type_display}</strong>
+                                    <p style="color: var(--text-secondary); font-size: 0.95rem; margin-top: 8px; line-height: 1.5;">${inc.description}</p>
+                                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 10px; display: flex; align-items: center; gap: 5px;">
+                                        <i class="bi bi-calendar3"></i> ${inc.date}
+                                    </p>
+                                </div>
+                                <span style="padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; background: ${inc.status === 'PENDING' ? 'rgba(245, 158, 11, 0.1)' : inc.status === 'APPROVED' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 79, 79, 0.1)'}; color: ${inc.status === 'PENDING' ? '#f59e0b' : inc.status === 'APPROVED' ? 'var(--success)' : 'var(--error)'}; border: 1px solid ${inc.status === 'PENDING' ? 'rgba(245, 158, 11, 0.2)' : inc.status === 'APPROVED' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 79, 79, 0.2)'};">
+                                    ${inc.status_display}
+                                </span>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+        } catch (error) {
+            console.error('Error loading incidents:', error);
+        }
+    }
+
+    // Cargar permisos
+    async function loadLeaveRequests() {
+        try {
+            const response = await fetch('/api/leave-requests/');
+            if (response.ok) {
+                const leaves = await response.json();
+                const container = document.getElementById('leavesList');
+
+                if (leaves.length === 0) {
+                    container.innerHTML = `
+                        <div style="padding: 20px; text-align: center; color: var(--text-secondary); background: var(--bg-secondary); border-radius: 12px; border: 1px dashed var(--border-color);">
+                            <i class="bi bi-calendar-check" style="font-size: 1.5rem; display: block; margin-bottom: 5px;"></i>
+                            No hay permisos solicitados
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = leaves.map(leave => `
+                        <div style="padding: 20px; background: var(--bg-primary); border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border-color); box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                            <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 10px;">
+                                <div>
+                                    <strong style="color: var(--brand-dark); font-size: 1.05rem;">${leave.type_display}</strong>
+                                    <p style="color: var(--text-secondary); font-size: 0.95rem; margin-top: 8px; line-height: 1.5;">${leave.reason}</p>
+                                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 10px; display: flex; align-items: center; gap: 5px;">
+                                        <i class="bi bi-calendar-range"></i> ${leave.start_date} - ${leave.end_date} 
+                                        <span style="background: var(--bg-secondary); padding: 2px 8px; border-radius: 10px; margin-left: 5px; font-size: 0.8rem;">${leave.days_requested} días</span>
+                                    </p>
+                                </div>
+                                <span style="padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; background: ${leave.status === 'PENDING' ? 'rgba(245, 158, 11, 0.1)' : leave.status === 'APPROVED' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 79, 79, 0.1)'}; color: ${leave.status === 'PENDING' ? '#f59e0b' : leave.status === 'APPROVED' ? 'var(--success)' : 'var(--error)'}; border: 1px solid ${leave.status === 'PENDING' ? 'rgba(245, 158, 11, 0.2)' : leave.status === 'APPROVED' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 79, 79, 0.2)'};">
+                                    ${leave.status_display}
+                                </span>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+        } catch (error) {
+            console.error('Error loading leave requests:', error);
+        }
+    }
+
+    // Cargar datos al iniciar
+    loadUser();
+    loadIncidents();
+    loadLeaveRequests();
+</script>
+{% endblock %}

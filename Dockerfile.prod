@@ -1,0 +1,36 @@
+# Dockerfile.prod
+
+# Usar una imagen base oficial de Python
+FROM python:3.12-slim
+
+# Establecer el directorio de trabajo
+WORKDIR /app
+
+# Instalar dependencias del sistema necesarias
+# build-essential y cmake son necesarios para dlib (face_recognition)
+# libpq-dev es necesario para psycopg2
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    libopenblas-dev \
+    liblapack-dev \
+    libx11-dev \
+    libgtk-3-dev \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copiar el archivo de requerimientos e instalar dependencias
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copiar el resto del código de la aplicación
+COPY . .
+
+# Recolectar archivos estáticos
+RUN python manage.py collectstatic --noinput
+
+# Exponer el puerto donde correrá Gunicorn
+EXPOSE 8000
+
+# Comando para correr la aplicación con Gunicorn
+CMD ["gunicorn", "uz_checkpoint.wsgi:application", "--bind", "0.0.0.0:8000"]

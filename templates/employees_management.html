@@ -1,0 +1,660 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestión de Empleados - Yikkan{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
+        <div>
+            <h2 style="font-size: 1.8rem; margin-bottom: 5px;">
+                <i class="bi bi-people-fill" style="color: var(--brand-primary);"></i> Gestión de Empleados
+            </h2>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">Administra la jerarquía organizacional</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="window.location.href='/dashboard'" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Volver
+            </button>
+            <button onclick="openEmployeeModal()" class="btn btn-primary">
+                <i class="bi bi-person-plus"></i> Nuevo Empleado
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+        <div>
+            <label style="display: block; margin-bottom: 5px; color: var(--text-secondary); font-size: 0.9rem;">
+                <i class="bi bi-search"></i> Buscar
+            </label>
+            <input type="text" id="searchInput" placeholder="Nombre, email, ID...">
+        </div>
+        <div>
+            <label style="display: block; margin-bottom: 5px; color: var(--text-secondary); font-size: 0.9rem;">
+                <i class="bi bi-briefcase"></i> Rol
+            </label>
+            <select id="roleFilter">
+                <option value="">Todos los roles</option>
+                <option value="CEO">CEO</option>
+                <option value="DIRECTOR">Director</option>
+                <option value="MANAGER">Gerente</option>
+                <option value="OPERATOR">Operador</option>
+                <option value="EMPLOYEE">Empleado</option>
+                <option value="ADMIN">Administrador</option>
+            </select>
+        </div>
+        <div>
+            <label style="display: block; margin-bottom: 5px; color: var(--text-secondary); font-size: 0.9rem;">
+                <i class="bi bi-building"></i> Departamento
+            </label>
+            <select id="departmentFilter">
+                <option value="">Todos los departamentos</option>
+            </select>
+        </div>
+        <div>
+            <label style="display: block; margin-bottom: 5px; color: var(--text-secondary); font-size: 0.9rem;">
+                <i class="bi bi-toggle-on"></i> Estado
+            </label>
+            <select id="statusFilter">
+                <option value="">Todos</option>
+                <option value="true" selected>Activos</option>
+                <option value="false">Inactivos</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Tabla de empleados -->
+    <div style="overflow-x: auto; border-radius: 12px; border: 1px solid var(--border-color);">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead style="background: var(--bg-secondary);">
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <th
+                        style="padding: 16px; text-align: left; color: var(--text-secondary); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                        Empleado</th>
+                    <th
+                        style="padding: 16px; text-align: left; color: var(--text-secondary); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                        Rol</th>
+                    <th
+                        style="padding: 16px; text-align: left; color: var(--text-secondary); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                        Departamento</th>
+                    <th
+                        style="padding: 16px; text-align: left; color: var(--text-secondary); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                        Supervisor</th>
+                    <th
+                        style="padding: 16px; text-align: center; color: var(--text-secondary); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                        Subordinados</th>
+                    <th
+                        style="padding: 16px; text-align: left; color: var(--text-secondary); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                        Usuario</th>
+                    <th
+                        style="padding: 16px; text-align: center; color: var(--text-secondary); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                        Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="employeesTableBody">
+                <tr>
+                    <td colspan="7" style="padding: 40px; text-align: center; color: var(--text-secondary);">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p style="margin-top: 10px;">Cargando empleados...</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal para crear/editar empleado -->
+<div id="employeeModal"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 30, 57, 0.5); backdrop-filter: blur(4px); z-index: 1000; overflow-y: auto;">
+    <div
+        style="max-width: 800px; margin: 50px auto; background: var(--bg-primary); border-radius: 16px; padding: 30px; border: 1px solid var(--border-color); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">
+            <h3 id="modalTitle" style="margin: 0; color: var(--brand-dark);">
+                <i class="bi bi-person-plus"></i> Nuevo Empleado
+            </h3>
+            <button onclick="closeEmployeeModal()"
+                style="background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; transition: color 0.2s;">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <form id="employeeForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <!-- Información básica -->
+            <div style="grid-column: 1 / -1;">
+                <h4 style="margin-bottom: 15px; color: var(--brand-primary); font-size: 1.1rem;">
+                    <i class="bi bi-person-badge"></i> Información Personal
+                </h4>
+            </div>
+
+            <div>
+                <label>Nombre <span style="color: var(--error);">*</span></label>
+                <input type="text" id="firstName" required>
+            </div>
+
+            <div>
+                <label>Apellido <span style="color: var(--error);">*</span></label>
+                <input type="text" id="lastName" required>
+            </div>
+
+            <div>
+                <label>Email <span style="color: var(--error);">*</span></label>
+                <input type="email" id="email" required>
+            </div>
+
+            <div>
+                <label>ID de Empleado <span style="color: var(--error);">*</span></label>
+                <input type="text" id="employeeId" required>
+            </div>
+
+            <!-- Jerarquía organizacional -->
+            <div style="grid-column: 1 / -1; margin-top: 10px;">
+                <h4 style="margin-bottom: 15px; color: var(--brand-primary); font-size: 1.1rem;">
+                    <i class="bi bi-diagram-3"></i> Jerarquía Organizacional
+                </h4>
+            </div>
+
+            <div>
+                <label>Rol <span style="color: var(--error);">*</span></label>
+                <select id="role" required onchange="updateSupervisorOptions()">
+                    <option value="">Seleccionar rol...</option>
+                    <option value="CEO">CEO</option>
+                    <option value="DIRECTOR">Director</option>
+                    <option value="MANAGER">Gerente</option>
+                    <option value="OPERATOR">Operador</option>
+                    <option value="EMPLOYEE">Empleado</option>
+                    <option value="ADMIN">Administrador</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Supervisor</label>
+                <select id="supervisor">
+                    <option value="">Sin supervisor</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Departamento</label>
+                <input type="text" id="department" list="departmentsList">
+                <datalist id="departmentsList"></datalist>
+            </div>
+
+            <div>
+                <label>Posición/Título</label>
+                <input type="text" id="position">
+            </div>
+
+            <!-- Credenciales -->
+            <div style="grid-column: 1 / -1; margin-top: 10px;">
+                <h4 style="margin-bottom: 15px; color: var(--brand-primary); font-size: 1.1rem;">
+                    <i class="bi bi-key"></i> Credenciales de Acceso
+                </h4>
+            </div>
+
+            <div>
+                <label>Usuario</label>
+                <input type="text" id="username">
+            </div>
+
+            <div>
+                <label>Contraseña <span id="passwordRequired" style="color: var(--error);">*</span></label>
+                <input type="password" id="password">
+                <small style="color: var(--text-secondary); font-size: 0.8rem;" id="passwordHelp">Mínimo 4
+                    caracteres</small>
+            </div>
+
+            <!-- Horarios -->
+            <div style="grid-column: 1 / -1; margin-top: 10px;">
+                <h4 style="margin-bottom: 15px; color: var(--brand-primary); font-size: 1.1rem;">
+                    <i class="bi bi-clock"></i> Horarios de Trabajo
+                </h4>
+            </div>
+
+            <div>
+                <label>Hora de Entrada</label>
+                <input type="time" id="workStartTime">
+            </div>
+
+            <div>
+                <label>Hora de Salida</label>
+                <input type="time" id="workEndTime">
+            </div>
+
+            <div>
+                <label>Inicio de Comida</label>
+                <input type="time" id="lunchStartTime">
+            </div>
+
+            <div>
+                <label>Fin de Comida</label>
+                <input type="time" id="lunchEndTime">
+            </div>
+
+            <!-- Estado -->
+            <div style="grid-column: 1 / -1;">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    <input type="checkbox" id="isActive" checked
+                        style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--brand-primary);">
+                    <span style="color: var(--text-primary);">Empleado activo</span>
+                </label>
+            </div>
+
+            <!-- Botones -->
+            <div
+                style="grid-column: 1 / -1; display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                <button type="button" onclick="closeEmployeeModal()" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> Guardar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Hidden input for employee ID when editing -->
+<input type="hidden" id="editingEmployeeId">
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentEmployeeId = null;
+    let allEmployees = [];
+
+    // Cargar empleados
+    async function loadEmployees() {
+        try {
+            const params = new URLSearchParams();
+
+            const search = document.getElementById('searchInput').value;
+            const role = document.getElementById('roleFilter').value;
+            const department = document.getElementById('departmentFilter').value;
+            const status = document.getElementById('statusFilter').value;
+
+            if (search) params.append('search', search);
+            if (role) params.append('role', role);
+            if (department) params.append('department', department);
+            if (status) params.append('is_active', status);
+
+            const response = await fetch(`/api/employees/management/?${params}`);
+            if (response.ok) {
+                allEmployees = await response.json();
+                renderEmployeesTable();
+            }
+        } catch (error) {
+            console.error('Error loading employees:', error);
+            showError('Error al cargar empleados');
+        }
+    }
+
+    // Renderizar tabla
+    function renderEmployeesTable() {
+        const tbody = document.getElementById('employeesTableBody');
+
+        if (allEmployees.length === 0) {
+            tbody.innerHTML = `
+            <tr>
+                <td colspan="7" style="padding: 40px; text-align: center; color: var(--text-secondary);">
+                    <i class="bi bi-inbox" style="font-size: 2rem; display: block; margin-bottom: 10px;"></i>
+                    No se encontraron empleados
+                </td>
+            </tr>
+        `;
+            return;
+        }
+
+        tbody.innerHTML = allEmployees.map(emp => {
+            const roleColors = {
+                'CEO': 'var(--brand-primary)',
+                'DIRECTOR': 'var(--brand-dark)',
+                'MANAGER': 'var(--success)',
+                'OPERATOR': 'var(--warning)',
+                'EMPLOYEE': 'var(--text-secondary)',
+                'ADMIN': 'var(--error)'
+            };
+
+            const roleColor = roleColors[emp.role] || 'var(--text-secondary)';
+
+            return `
+            <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.2s;">
+                <td style="padding: 15px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, ${roleColor}, rgba(255,255,255,0.5)); display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 0.9rem;">
+                            ${emp.first_name[0]}${emp.last_name[0]}
+                        </div>
+                        <div>
+                            <div style="font-weight: 600; color: var(--brand-dark);">${emp.first_name} ${emp.last_name}</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">${emp.email}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary); opacity: 0.8;">ID: ${emp.employee_id}</div>
+                        </div>
+                    </div>
+                </td>
+                <td style="padding: 15px;">
+                    <span style="padding: 6px 12px; background: color-mix(in srgb, ${roleColor} 10%, transparent); color: ${roleColor}; border-radius: 20px; font-size: 0.8rem; font-weight: 600; border: 1px solid color-mix(in srgb, ${roleColor} 20%, transparent);">
+                        ${emp.role_display}
+                    </span>
+                </td>
+                <td style="padding: 15px; color: var(--text-primary);">
+                    ${emp.department || '-'}
+                    ${emp.position ? `<br><small style="color: var(--text-secondary);">${emp.position}</small>` : ''}
+                </td>
+                <td style="padding: 15px; color: var(--text-secondary);">
+                    ${emp.supervisor_name || '-'}
+                </td>
+                <td style="padding: 15px; text-align: center;">
+                    <span style="padding: 4px 10px; background: var(--bg-secondary); border-radius: 12px; font-weight: 600; font-size: 0.9rem; color: var(--brand-dark);">
+                        ${emp.subordinates_count}
+                    </span>
+                </td>
+                <td style="padding: 15px; color: var(--text-secondary); font-family: monospace;">
+                    ${emp.username || '-'}
+                </td>
+                <td style="padding: 15px; text-align: center;">
+                    <div style="display: flex; gap: 8px; justify-content: center;">
+                        <button onclick="editEmployee(${emp.id})" class="btn btn-secondary" style="padding: 8px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;" title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button onclick="viewSubordinates(${emp.id})" class="btn btn-secondary" style="padding: 8px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;" title="Ver subordinados">
+                            <i class="bi bi-diagram-3"></i>
+                        </button>
+                        ${emp.is_active ?
+                    `<button onclick="deactivateEmployee(${emp.id})" class="btn btn-secondary" style="padding: 8px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; color: var(--error); border-color: var(--error);" title="Desactivar">
+                                <i class="bi bi-x-circle"></i>
+                            </button>` :
+                    `<button onclick="activateEmployee(${emp.id})" class="btn btn-primary" style="padding: 8px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;" title="Activar">
+                                <i class="bi bi-check-circle"></i>
+                            </button>`
+                }
+                    </div>
+                </td>
+            </tr>
+        `;
+        }).join('');
+    }
+
+    // Abrir modal
+    function openEmployeeModal(employeeId = null) {
+        currentEmployeeId = employeeId;
+        const modal = document.getElementById('employeeModal');
+        const form = document.getElementById('employeeForm');
+        const title = document.getElementById('modalTitle');
+
+        form.reset();
+
+        if (employeeId) {
+            title.innerHTML = '<i class="bi bi-pencil"></i> Editar Empleado';
+            document.getElementById('passwordRequired').style.display = 'none';
+            document.getElementById('passwordHelp').textContent = 'Dejar en blanco para no cambiar';
+            loadEmployeeData(employeeId);
+        } else {
+            title.innerHTML = '<i class="bi bi-person-plus"></i> Nuevo Empleado';
+            document.getElementById('passwordRequired').style.display = 'inline';
+            document.getElementById('passwordHelp').textContent = 'Mínimo 4 caracteres';
+        }
+
+        modal.style.display = 'block';
+        loadDepartments();
+    }
+
+    // Cerrar modal
+    function closeEmployeeModal() {
+        document.getElementById('employeeModal').style.display = 'none';
+        currentEmployeeId = null;
+    }
+
+    // Cargar datos del empleado para editar
+    async function loadEmployeeData(id) {
+        try {
+            const response = await fetch(`/api/employees/${id}/detail/`);
+            if (response.ok) {
+                const emp = await response.json();
+                document.getElementById('firstName').value = emp.first_name;
+                document.getElementById('lastName').value = emp.last_name;
+                document.getElementById('email').value = emp.email;
+                document.getElementById('employeeId').value = emp.employee_id;
+                document.getElementById('role').value = emp.role;
+                document.getElementById('supervisor').value = emp.supervisor || '';
+                document.getElementById('department').value = emp.department || '';
+                document.getElementById('position').value = emp.position || '';
+                document.getElementById('username').value = emp.username || '';
+                document.getElementById('workStartTime').value = emp.work_start_time || '';
+                document.getElementById('workEndTime').value = emp.work_end_time || '';
+                document.getElementById('lunchStartTime').value = emp.lunch_start_time || '';
+                document.getElementById('lunchEndTime').value = emp.lunch_end_time || '';
+                document.getElementById('isActive').checked = emp.is_active;
+
+                await updateSupervisorOptions();
+            }
+        } catch (error) {
+            console.error('Error loading employee:', error);
+        }
+    }
+
+    // Actualizar opciones de supervisor según el rol
+    async function updateSupervisorOptions() {
+        const role = document.getElementById('role').value;
+        const supervisorSelect = document.getElementById('supervisor');
+
+        if (!role) {
+            supervisorSelect.innerHTML = '<option value="">Seleccione un rol primero</option>';
+            return;
+        }
+
+        if (role === 'CEO') {
+            supervisorSelect.innerHTML = '<option value="">CEO no tiene supervisor</option>';
+            supervisorSelect.disabled = true;
+            return;
+        }
+
+        supervisorSelect.disabled = false;
+
+        try {
+            const params = new URLSearchParams({ role });
+            if (currentEmployeeId) {
+                params.append('current_id', currentEmployeeId);
+            }
+
+            const response = await fetch(`/api/employees/supervisor-options/?${params}`);
+            if (response.ok) {
+                const supervisors = await response.json();
+                supervisorSelect.innerHTML = '<option value="">Sin supervisor</option>' +
+                    supervisors.map(sup => `
+                    <option value="${sup.id}">
+                        ${sup.name} - ${sup.role_display}${sup.department ? ` (${sup.department})` : ''}
+                    </option>
+                `).join('');
+            }
+        } catch (error) {
+            console.error('Error loading supervisors:', error);
+        }
+    }
+
+    // Cargar departamentos
+    async function loadDepartments() {
+        try {
+            const response = await fetch('/api/employees/departments/');
+            if (response.ok) {
+                const departments = await response.json();
+                const datalist = document.getElementById('departmentsList');
+                datalist.innerHTML = departments.map(dept => `<option value="${dept}">`).join('');
+
+                // También actualizar el filtro
+                const filter = document.getElementById('departmentFilter');
+                const currentValue = filter.value;
+                filter.innerHTML = '<option value="">Todos los departamentos</option>' +
+                    departments.map(dept => `<option value="${dept}">${dept}</option>`).join('');
+                filter.value = currentValue;
+            }
+        } catch (error) {
+            console.error('Error loading departments:', error);
+        }
+    }
+
+    // Guardar empleado
+    document.getElementById('employeeForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData();
+        formData.append('first_name', document.getElementById('firstName').value);
+        formData.append('last_name', document.getElementById('lastName').value);
+        formData.append('email', document.getElementById('email').value);
+        formData.append('employee_id', document.getElementById('employeeId').value);
+        formData.append('role', document.getElementById('role').value);
+
+        const supervisor = document.getElementById('supervisor').value;
+        if (supervisor) formData.append('supervisor', supervisor);
+
+        const department = document.getElementById('department').value;
+        if (department) formData.append('department', department);
+
+        const position = document.getElementById('position').value;
+        if (position) formData.append('position', position);
+
+        const username = document.getElementById('username').value;
+        if (username) formData.append('username', username);
+
+        const password = document.getElementById('password').value;
+        if (password) formData.append('password_raw', password);
+
+        const workStartTime = document.getElementById('workStartTime').value;
+        if (workStartTime) formData.append('work_start_time', workStartTime);
+
+        const workEndTime = document.getElementById('workEndTime').value;
+        if (workEndTime) formData.append('work_end_time', workEndTime);
+
+        const lunchStartTime = document.getElementById('lunchStartTime').value;
+        if (lunchStartTime) formData.append('lunch_start_time', lunchStartTime);
+
+        const lunchEndTime = document.getElementById('lunchEndTime').value;
+        if (lunchEndTime) formData.append('lunch_end_time', lunchEndTime);
+
+        formData.append('is_active', document.getElementById('isActive').checked);
+
+        try {
+            const url = currentEmployeeId
+                ? `/api/employees/${currentEmployeeId}/update/`
+                : '/api/employees/create/';
+
+            const method = currentEmployeeId ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
+                body: formData
+            });
+
+            if (response.ok) {
+                showSuccess(currentEmployeeId ? 'Empleado actualizado exitosamente' : 'Empleado creado exitosamente');
+                closeEmployeeModal();
+                loadEmployees();
+            } else {
+                const error = await response.json();
+                showError(JSON.stringify(error));
+            }
+        } catch (error) {
+            console.error('Error saving employee:', error);
+            showError('Error al guardar empleado');
+        }
+    });
+
+    // Editar empleado
+    function editEmployee(id) {
+        openEmployeeModal(id);
+    }
+
+    // Ver subordinados
+    async function viewSubordinates(id) {
+        try {
+            const response = await fetch(`/api/employees/${id}/subordinates/`);
+            if (response.ok) {
+                const subordinates = await response.json();
+                if (subordinates.length === 0) {
+                    alert('Este empleado no tiene subordinados');
+                } else {
+                    const names = subordinates.map(s => `${s.first_name} ${s.last_name} (${s.role_display})`).join('\n');
+                    alert(`Subordinados:\n\n${names}`);
+                }
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    // Desactivar empleado
+    async function deactivateEmployee(id) {
+        if (!confirm('¿Está seguro de desactivar este empleado?')) return;
+
+        try {
+            const response = await fetch(`/api/employees/${id}/delete/`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                showSuccess('Empleado desactivado exitosamente');
+                loadEmployees();
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showError('Error al desactivar empleado');
+        }
+    }
+
+    // Activar empleado
+    async function activateEmployee(id) {
+        try {
+            const response = await fetch(`/api/employees/${id}/update/`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ is_active: true })
+            });
+
+            if (response.ok) {
+                showSuccess('Empleado activado exitosamente');
+                loadEmployees();
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showError('Error al activar empleado');
+        }
+    }
+
+    // Mensajes
+    function showSuccess(message) {
+        alert(message);
+    }
+
+    function showError(message) {
+        alert('Error: ' + message);
+    }
+
+    // Event listeners para filtros
+    document.getElementById('searchInput').addEventListener('input', debounce(loadEmployees, 500));
+    document.getElementById('roleFilter').addEventListener('change', loadEmployees);
+    document.getElementById('departmentFilter').addEventListener('change', loadEmployees);
+    document.getElementById('statusFilter').addEventListener('change', loadEmployees);
+
+    // Debounce helper
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    // Cargar al iniciar
+    loadEmployees();
+    loadDepartments();
+</script>
+{% endblock %}

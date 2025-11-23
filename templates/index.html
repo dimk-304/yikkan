@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Inicio - Yikkan{% endblock %}
+
+{% block content %}
+<div class="card" style="text-align: center; border: none; background: transparent; box-shadow: none; padding: 0;">
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
+        <a href="/login" class="btn btn-primary"
+            style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+            <i class="bi bi-shield-lock"></i> Iniciar Sesión
+        </a>
+    </div>
+
+    <div
+        style="background: var(--bg-primary); padding: 60px 40px; border-radius: 24px; border: 1px solid var(--border-color); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05); margin-bottom: 40px;">
+        <h2 style="margin-bottom: 20px; font-size: 2.5rem; color: var(--brand-dark); font-weight: 800;">Bienvenido a
+            Yikkan</h2>
+        <p
+            style="color: var(--text-secondary); margin-bottom: 50px; font-size: 1.2rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+            Sistema integral para el control de asistencia y gestión de personal mediante reconocimiento facial.
+        </p>
+
+        <div
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; max-width: 900px; margin: 0 auto;">
+            <a href="/attendance" style="text-decoration: none;">
+                <div class="card"
+                    style="cursor: pointer; transition: all 0.3s ease; height: 100%; padding: 40px 30px; border: 1px solid var(--border-color); background: var(--bg-secondary); display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                    <div
+                        style="width: 80px; height: 80px; border-radius: 50%; background: rgba(58, 107, 255, 0.1); display: flex; align-items: center; justify-content: center; margin-bottom: 25px;">
+                        <i class="bi bi-person-bounding-box"
+                            style="font-size: 2.5rem; color: var(--brand-primary);"></i>
+                    </div>
+                    <h3 style="margin-bottom: 15px; color: var(--brand-dark); font-size: 1.5rem; font-weight: 700;">
+                        Chequeo de Asistencia</h3>
+                    <p style="color: var(--text-secondary); font-size: 1rem; line-height: 1.6;">
+                        Registra tu entrada o salida de forma rápida y segura mediante reconocimiento facial.
+                    </p>
+                </div>
+            </a>
+
+            <a href="/dashboard" style="text-decoration: none;">
+                <div class="card"
+                    style="cursor: pointer; transition: all 0.3s ease; height: 100%; padding: 40px 30px; border: 1px solid var(--border-color); background: var(--bg-secondary); display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                    <div
+                        style="width: 80px; height: 80px; border-radius: 50%; background: rgba(15, 30, 57, 0.1); display: flex; align-items: center; justify-content: center; margin-bottom: 25px;">
+                        <i class="bi bi-grid-1x2-fill" style="font-size: 2.5rem; color: var(--brand-dark);"></i>
+                    </div>
+                    <h3 style="margin-bottom: 15px; color: var(--brand-dark); font-size: 1.5rem; font-weight: 700;">
+                        Panel Administrativo</h3>
+                    <p style="color: var(--text-secondary); font-size: 1rem; line-height: 1.6;">
+                        Gestiona empleados, horarios, reportes y visualiza el historial completo de registros.
+                    </p>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 40px; background: transparent; border: none; box-shadow: none;">
+    <h3
+        style="margin-bottom: 30px; text-align: center; color: var(--brand-dark); font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px;">
+        <i class="bi bi-stars" style="color: var(--brand-primary);"></i> Características Principales
+    </h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+        <div
+            style="text-align: center; padding: 30px; background: var(--bg-primary); border-radius: 16px; border: 1px solid var(--border-color);">
+            <div style="font-size: 2rem; margin-bottom: 15px; color: var(--brand-primary);"><i
+                    class="bi bi-camera-fill"></i></div>
+            <h4 style="color: var(--brand-dark); margin-bottom: 10px; font-weight: 600;">Reconocimiento Facial</h4>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">
+                Tecnología avanzada para identificación precisa y sin contacto.
+            </p>
+        </div>
+
+        <div
+            style="text-align: center; padding: 30px; background: var(--bg-primary); border-radius: 16px; border: 1px solid var(--border-color);">
+            <div style="font-size: 2rem; margin-bottom: 15px; color: var(--success);"><i
+                    class="bi bi-lightning-charge-fill"></i></div>
+            <h4 style="color: var(--brand-dark); margin-bottom: 10px; font-weight: 600;">Registro Automático</h4>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">
+                Detección inteligente de entradas y salidas según el horario.
+            </p>
+        </div>
+
+        <div
+            style="text-align: center; padding: 30px; background: var(--bg-primary); border-radius: 16px; border: 1px solid var(--border-color);">
+            <div style="font-size: 2rem; margin-bottom: 15px; color: var(--brand-dark);"><i
+                    class="bi bi-phone-fill"></i></div>
+            <h4 style="color: var(--brand-dark); margin-bottom: 10px; font-weight: 600;">Multi-dispositivo</h4>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">
+                Accede desde cualquier dispositivo: móvil, tablet o escritorio.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
