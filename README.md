@@ -46,6 +46,19 @@ docker compose -f docker-compose.dev.yml exec web python scripts/create_test_use
 docker compose -f docker-compose.dev.yml exec web python scripts/populate_hierarchy.py
 ```
 
+Opcional: define contraseñas por variables de entorno para evitar valores aleatorios:
+
+```bash
+docker compose -f docker-compose.dev.yml exec \
+  -e DEMO_ADMIN_PASSWORD='tu_password_admin' \
+  -e DEMO_EMPLOYEE_PASSWORD='tu_password_empleado' \
+  web python -m scripts.create_test_users
+
+docker compose -f docker-compose.dev.yml exec \
+  -e DEMO_HIERARCHY_PASSWORD='tu_password_jerarquia' \
+  web python -m scripts.populate_hierarchy
+```
+
 ### 5) Logs
 
 ```bash

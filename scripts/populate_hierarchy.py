@@ -5,6 +5,7 @@ Ejecutar con:
 docker compose -f docker-compose.dev.yml exec web python scripts/populate_hierarchy.py
 """
 import os
+import secrets
 
 import django
 
@@ -15,8 +16,13 @@ django.setup()
 from attendance.models import Employee
 
 
+def _hierarchy_password() -> str:
+    return os.getenv("DEMO_HIERARCHY_PASSWORD", secrets.token_urlsafe(12))
+
+
 def create_hierarchy():
     print("🚀 Iniciando creación de jerarquía organizacional...")
+    default_password = _hierarchy_password()
 
     # 1. Crear CEO
     ceo, created = Employee.objects.get_or_create(
@@ -33,7 +39,7 @@ def create_hierarchy():
         },
     )
     if created:
-        ceo.set_password("admin123")
+        ceo.set_password(default_password)
         ceo.save()
         print(f"✅ CEO creado: {ceo}")
     else:
@@ -62,7 +68,7 @@ def create_hierarchy():
             },
         )
         if created:
-            dir_obj.set_password("admin123")
+            dir_obj.set_password(default_password)
             dir_obj.save()
             print(f"  ✅ Director creado: {dir_obj} (Supervisor: {ceo.first_name})")
         directors.append(dir_obj)
@@ -90,7 +96,7 @@ def create_hierarchy():
                 },
             )
             if created:
-                mgr.set_password("1234")
+                mgr.set_password(default_password)
                 mgr.save()
                 print(f"    ✅ Gerente creado: {mgr} (Supervisor: {director.first_name})")
             managers.append(mgr)
@@ -117,16 +123,14 @@ def create_hierarchy():
                 },
             )
             if created:
-                op.set_password("1234")
+                op.set_password(default_password)
                 op.save()
                 print(f"      ✅ Operador creado: {op} (Supervisor: {manager.first_name})")
 
     print("\n✨ Jerarquía creada exitosamente.")
-    print("Usuarios de prueba:")
-    print("- CEO: ceo / admin123")
-    print("- Director: dir.ana / admin123")
-    print("- Gerente: mgr.[id].0 / 1234")
-    print("- Operador: op.[id].0 / 1234")
+    print("Credenciales de esta ejecución:")
+    print(f"- Password común de jerarquía: {default_password}")
+    print("Tip: define DEMO_HIERARCHY_PASSWORD para contraseña fija.")
 
 
 if __name__ == "__main__":
