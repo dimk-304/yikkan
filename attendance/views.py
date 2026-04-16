@@ -35,6 +35,56 @@ class EmployeeRegistrationView(views.APIView):
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+class EmployeeFaceRegistrationView(views.APIView):
+    """Registra o actualiza el rostro de un empleado existente."""
+    parser_classes = (parsers.MultiPartParser, parsers.FormParser)
+
+    def post(self, request, pk):
+        employee_id = request.session.get('employee_id')
+        is_superadmin = request.session.get('is_superadmin')
+        if not employee_id:
+            return Response({'error': 'Acceso denegado'}, status=status.HTTP_403_FORBIDDEN)
+
+        # Compatibilidad: sesiones anteriores pueden no traer is_superadmin.
+        if is_superadmin is None:
+            try:
+                current_employee = Employee.objects.get(id=employee_id, is_active=True)
+                is_superadmin = current_employee.is_system_admin()
+                request.session['is_superadmin'] = is_superadmin
+            except Employee.DoesNotExist:
+                return Response({'error': 'Acceso denegado'}, status=status.HTTP_403_FORBIDDEN)
+
+        if not is_superadmin:
+            return Response({'error': 'Acceso denegado'}, status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            employee = Employee.objects.get(pk=pk)
+        except Employee.DoesNotExist:
+            return Response({'error': 'Empleado no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+        photo = request.FILES.get('photo')
+        if not photo:
+            return Response({'error': 'Photo is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Generar encoding facial con la imagen recibida.
+        encoding = get_face_encoding(photo)
+        if encoding is None:
+            return Response({'error': 'No face detected in the photo'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Reiniciar puntero para poder guardar el archivo en ImageField.
+        if hasattr(photo, 'seek'):
+            photo.seek(0)
+
+        employee.photo = photo
+        employee.face_encoding = encoding
+        employee.save(update_fields=['photo', 'face_encoding'])
+
+        return Response({
+            'message': 'Rostro registrado exitosamente',
+            'employee': EmployeeSerializer(employee).data,
+        }, status=status.HTTP_200_OK)
+
 class AttendanceCheckView(views.APIView):
     parser_classes = (parsers.MultiPartParser, parsers.FormParser)
 
@@ -111,6 +161,7 @@ class EmployeeDetailView(generics.RetrieveUpdateDestroyAPIView):
     """Obtener, actualizar o eliminar un empleado"""
     queryset = Employee.objects.all()
     serializer_class = EmployeeDetailSerializer
+    parser_classes = (parsers.MultiPartParser, parsers.FormParser, parsers.JSONParser)
 
 class AttendanceLogsView(generics.ListAPIView):
     """Lista logs con filtros"""
@@ -205,8 +256,9 @@ class ExportLogsView(views.APIView):
 @login_required
 def index_view(request):
     # Redirigir según rol
+    is_superadmin = request.session.get('is_superadmin', False)
     role = request.session.get('employee_role')
-    if role == 'ADMIN':
+    if is_superadmin:
         return redirect('/dashboard')
     elif role == 'EMPLOYEE':
         return redirect('/employee-panel')

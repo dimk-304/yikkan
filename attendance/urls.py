@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import (
     EmployeeRegistrationView, 
+    EmployeeFaceRegistrationView,
     AttendanceCheckView, 
     RecentLogsView,
     EmployeeListView,
@@ -35,6 +36,7 @@ from .employee_views import (
 urlpatterns = [
     # API endpoints originales
     path('register/', EmployeeRegistrationView.as_view(), name='employee-register'),
+    path('employees/<int:pk>/register-face/', EmployeeFaceRegistrationView.as_view(), name='employee-register-face'),
     path('check/', AttendanceCheckView.as_view(), name='attendance-check'),
     path('logs/recent/', RecentLogsView.as_view(), name='recent-logs'),
     

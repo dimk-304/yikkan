@@ -172,10 +172,11 @@ class EmployeeSupervisorOptionsView(APIView):
         # Definir qué roles pueden supervisar a cada rol
         supervisor_roles = {
             'CEO': [],  # CEO no tiene supervisor
-            'DIRECTOR': ['CEO', 'ADMIN'],
-            'MANAGER': ['CEO', 'DIRECTOR', 'ADMIN'],
-            'OPERATOR': ['CEO', 'DIRECTOR', 'MANAGER', 'ADMIN'],
-            'EMPLOYEE': ['CEO', 'DIRECTOR', 'MANAGER', 'ADMIN'],
+            'DIRECTOR': ['CEO'],
+            'MANAGER': ['CEO', 'DIRECTOR'],
+            'OPERATOR': ['CEO', 'DIRECTOR', 'MANAGER'],
+            'EMPLOYEE': ['CEO', 'DIRECTOR', 'MANAGER'],
+            'ADMIN': ['CEO', 'DIRECTOR'],
         }
         
         allowed_roles = supervisor_roles.get(role, [])
@@ -184,9 +185,8 @@ class EmployeeSupervisorOptionsView(APIView):
             return Response([])
         
         # Obtener empleados con esos roles
-        queryset = Employee.objects.filter(
-            role__in=allowed_roles,
-            is_active=True
+        queryset = Employee.objects.filter(is_active=True).filter(
+            Q(role__in=allowed_roles) | Q(is_superadmin=True)
         )
         
         # Excluir al empleado actual si se está editando

@@ -16,7 +16,7 @@
                 <input type="text" id="searchInput" placeholder="Buscar empleado..." style="padding-left: 35px;">
             </div>
             <button onclick="window.location.href='/register'" class="btn btn-primary">
-                <i class="bi bi-person-plus"></i> Nuevo Empleado
+                <i class="bi bi-person-plus"></i> Registrar Rostro
             </button>
         </div>
     </div>
@@ -71,6 +71,66 @@
 
             <h4
                 style="margin: 25px 0 15px 0; color: var(--brand-primary); font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+                <i class="bi bi-key"></i> Credenciales WebApp
+            </h4>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="form-group">
+                    <label>Usuario</label>
+                    <input type="text" id="editUsername" placeholder="Por defecto se usa el correo">
+                    <small style="color: var(--text-secondary); font-size: 0.8rem;">
+                        Si lo dejas vacio, se usara el correo como usuario.
+                    </small>
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="editPassword" placeholder="Dejar vacio para no cambiar">
+                    <small style="color: var(--text-secondary); font-size: 0.8rem;">
+                        Debe cumplir reglas de seguridad (no comun, no numerica, minimo recomendado 8+).
+                    </small>
+                </div>
+            </div>
+
+            <h4
+                style="margin: 25px 0 15px 0; color: var(--brand-primary); font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+                <i class="bi bi-shield-lock"></i> Permisos del Sistema
+            </h4>
+
+            <div class="form-group">
+                <label>Tipo de acceso</label>
+                <select id="editSystemPermission">
+                    <option value="normal">Usuario normal</option>
+                    <option value="superadmin">Super administrador</option>
+                </select>
+                <small style="color: var(--text-secondary); font-size: 0.8rem;">
+                    El permiso es independiente del rol jerárquico del empleado.
+                </small>
+            </div>
+
+            <h4
+                style="margin: 25px 0 15px 0; color: var(--brand-primary); font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+                <i class="bi bi-images"></i> Fotos
+            </h4>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="form-group">
+                    <label>Rostro registrado</label>
+                    <img id="editFacePhotoPreview" alt="Rostro registrado"
+                        style="width: 100%; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-secondary); min-height: 160px; object-fit: cover;">
+                </div>
+                <div class="form-group">
+                    <label>Foto para credencial</label>
+                    <img id="editProfilePhotoPreview" alt="Foto de credencial"
+                        style="width: 100%; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-secondary); min-height: 160px; object-fit: cover; margin-bottom: 10px;">
+                    <input type="file" id="editProfilePhoto" accept="image/*">
+                    <small style="color: var(--text-secondary); font-size: 0.8rem;">
+                        Esta imagen es para presentacion y credenciales.
+                    </small>
+                </div>
+            </div>
+
+            <h4
+                style="margin: 25px 0 15px 0; color: var(--brand-primary); font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
                 <i class="bi bi-clock"></i> Horarios
             </h4>
 
@@ -116,10 +176,80 @@
         </form>
     </div>
 </div>
+
+<!-- Modal para registrar rostro -->
+<div id="faceModal"
+    style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 30, 57, 0.5); backdrop-filter: blur(4px); z-index: 1001; display: none; align-items: center; justify-content: center; padding: 20px;">
+    <div class="card"
+        style="max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; background: var(--bg-primary); border: 1px solid var(--border-color); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);">
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">
+            <h3 style="margin: 0; color: var(--brand-dark);"><i class="bi bi-camera"></i> Registrar Rostro</h3>
+            <button onclick="closeFaceModal()"
+                style="background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; transition: color 0.2s;">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <div id="faceAlertContainer"></div>
+        <input type="hidden" id="faceEmployeeId">
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+            <div>
+                <label>Nombre</label>
+                <input type="text" id="faceEmployeeName" readonly>
+            </div>
+            <div>
+                <label>Email</label>
+                <input type="text" id="faceEmployeeEmail" readonly>
+            </div>
+            <div>
+                <label>ID Empleado</label>
+                <input type="text" id="faceEmployeeCode" readonly>
+            </div>
+        </div>
+
+        <div class="camera-container"
+            style="border: 2px dashed var(--border-color); border-radius: 16px; padding: 10px; background: var(--bg-secondary); position: relative; overflow: hidden;">
+            <video id="faceVideo" autoplay playsinline style="width: 100%; border-radius: 12px; display: none;"></video>
+            <canvas id="faceCanvas" class="hidden"></canvas>
+            <img id="facePreview" class="hidden" style="width: 100%; border-radius: 12px;">
+
+            <div id="faceCameraPlaceholder" style="padding: 40px; text-align: center; color: var(--text-secondary);">
+                <i class="bi bi-person-bounding-box" style="font-size: 3rem; margin-bottom: 10px; display: block;"></i>
+                <p>Inicia la camara para registrar el rostro</p>
+            </div>
+        </div>
+
+        <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+            <button type="button" id="faceStartCamera" class="btn btn-secondary">
+                <i class="bi bi-camera-video"></i> Iniciar Camara
+            </button>
+            <button type="button" id="faceCapturePhoto" class="btn btn-primary hidden">
+                <i class="bi bi-camera"></i> Capturar Foto
+            </button>
+            <button type="button" id="faceRetakePhoto" class="btn btn-secondary hidden">
+                <i class="bi bi-arrow-counterclockwise"></i> Tomar Otra
+            </button>
+        </div>
+
+        <div
+            style="display: flex; gap: 10px; margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+            <button type="button" id="faceSubmitBtn" class="btn btn-primary" style="flex: 1;" disabled>
+                <i class="bi bi-check-circle"></i> Guardar Rostro
+            </button>
+            <button type="button" onclick="closeFaceModal()" class="btn btn-secondary">
+                <i class="bi bi-x-circle"></i> Cancelar
+            </button>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+    const EMPTY_IMAGE =
+        'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="300"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%2394a3b8" font-family="Arial" font-size="18">Sin imagen</text></svg>';
     let employees = [];
     let searchTimeout;
 
@@ -127,6 +257,22 @@
     const editModal = document.getElementById('editModal');
     const editForm = document.getElementById('editForm');
     const alertContainer = document.getElementById('alertContainer');
+    const faceModal = document.getElementById('faceModal');
+    const faceAlertContainer = document.getElementById('faceAlertContainer');
+    const faceVideo = document.getElementById('faceVideo');
+    const faceCanvas = document.getElementById('faceCanvas');
+    const facePreview = document.getElementById('facePreview');
+    const faceCameraPlaceholder = document.getElementById('faceCameraPlaceholder');
+    const faceStartCameraBtn = document.getElementById('faceStartCamera');
+    const faceCapturePhotoBtn = document.getElementById('faceCapturePhoto');
+    const faceRetakePhotoBtn = document.getElementById('faceRetakePhoto');
+    const faceSubmitBtn = document.getElementById('faceSubmitBtn');
+    const editFacePhotoPreview = document.getElementById('editFacePhotoPreview');
+    const editProfilePhotoPreview = document.getElementById('editProfilePhotoPreview');
+    const editProfilePhotoInput = document.getElementById('editProfilePhoto');
+
+    let faceStream = null;
+    let faceBlob = null;
 
     searchInput.addEventListener('input', (e) => {
         clearTimeout(searchTimeout);
@@ -196,9 +342,14 @@
                             </td>
                             <td style="padding: 15px; color: var(--text-secondary);">${emp.total_logs}</td>
                             <td style="padding: 15px; text-align: center;">
-                                <button onclick="editEmployee(${emp.id})" class="btn btn-secondary" style="padding: 8px 12px; font-size: 0.9rem;">
-                                    <i class="bi bi-pencil"></i> Editar
-                                </button>
+                                <div style="display: flex; gap: 8px; justify-content: center;">
+                                    <button onclick="registerFace(${emp.id})" class="btn btn-primary" style="padding: 8px 12px; font-size: 0.85rem;">
+                                        <i class="bi bi-camera"></i> Rostro
+                                    </button>
+                                    <button onclick="editEmployee(${emp.id})" class="btn btn-secondary" style="padding: 8px 12px; font-size: 0.85rem;">
+                                        <i class="bi bi-pencil"></i> Editar
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     `).join('')}
@@ -218,11 +369,17 @@
                 document.getElementById('editLastName').value = employee.last_name;
                 document.getElementById('editEmail').value = employee.email;
                 document.getElementById('editEmployeeId').value = employee.employee_id;
+                document.getElementById('editUsername').value = employee.username || employee.email || '';
+                document.getElementById('editPassword').value = '';
+                document.getElementById('editSystemPermission').value = employee.is_superadmin ? 'superadmin' : 'normal';
                 document.getElementById('editWorkStart').value = employee.work_start_time || '';
                 document.getElementById('editWorkEnd').value = employee.work_end_time || '';
                 document.getElementById('editLunchStart').value = employee.lunch_start_time || '';
                 document.getElementById('editLunchEnd').value = employee.lunch_end_time || '';
                 document.getElementById('editIsActive').checked = employee.is_active;
+                editProfilePhotoInput.value = '';
+                editFacePhotoPreview.src = employee.photo || EMPTY_IMAGE;
+                editProfilePhotoPreview.src = employee.profile_photo || EMPTY_IMAGE;
 
                 editModal.style.display = 'flex';
             }
@@ -234,35 +391,119 @@
     function closeModal() {
         editModal.style.display = 'none';
         editForm.reset();
+        editProfilePhotoInput.value = '';
+        editFacePhotoPreview.src = EMPTY_IMAGE;
+        editProfilePhotoPreview.src = EMPTY_IMAGE;
         alertContainer.innerHTML = '';
+    }
+
+    function registerFace(id) {
+        const employee = employees.find(emp => emp.id === id);
+        if (!employee) {
+            return;
+        }
+
+        document.getElementById('faceEmployeeId').value = employee.id;
+        document.getElementById('faceEmployeeName').value = `${employee.first_name} ${employee.last_name}`;
+        document.getElementById('faceEmployeeEmail').value = employee.email;
+        document.getElementById('faceEmployeeCode').value = employee.employee_id;
+
+        resetFaceCaptureState();
+        faceAlertContainer.innerHTML = '';
+        faceModal.style.display = 'flex';
+    }
+
+    function stopFaceStream() {
+        if (faceStream) {
+            faceStream.getTracks().forEach(track => track.stop());
+            faceStream = null;
+        }
+    }
+
+    function resetFaceCaptureState() {
+        stopFaceStream();
+        faceBlob = null;
+        facePreview.classList.add('hidden');
+        faceVideo.style.display = 'none';
+        faceCameraPlaceholder.style.display = 'block';
+        faceStartCameraBtn.classList.remove('hidden');
+        faceCapturePhotoBtn.classList.add('hidden');
+        faceRetakePhotoBtn.classList.add('hidden');
+        faceSubmitBtn.disabled = true;
+        faceSubmitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Guardar Rostro';
+    }
+
+    function closeFaceModal() {
+        resetFaceCaptureState();
+        faceAlertContainer.innerHTML = '';
+        faceModal.style.display = 'none';
+    }
+
+    function showFaceAlert(message, type) {
+        const icon = type === 'success' ? 'check-circle' : 'exclamation-triangle';
+        faceAlertContainer.innerHTML = `
+            <div class="alert alert-${type}" style="display: flex; align-items: center; gap: 10px;">
+                <i class="bi bi-${icon}"></i> ${message}
+            </div>
+        `;
     }
 
     editForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
         const id = document.getElementById('employeeId').value;
-        const data = {
-            first_name: document.getElementById('editFirstName').value,
-            last_name: document.getElementById('editLastName').value,
-            email: document.getElementById('editEmail').value,
-            employee_id: document.getElementById('editEmployeeId').value,
-            work_start_time: document.getElementById('editWorkStart').value || null,
-            work_end_time: document.getElementById('editWorkEnd').value || null,
-            lunch_start_time: document.getElementById('editLunchStart').value || null,
-            lunch_end_time: document.getElementById('editLunchEnd').value || null,
-            is_active: document.getElementById('editIsActive').checked
-        };
+        const email = document.getElementById('editEmail').value.trim();
+        const usernameRaw = document.getElementById('editUsername').value.trim();
+        const newPassword = document.getElementById('editPassword').value;
+        const resolvedUsername = usernameRaw || email;
+
+        const formData = new FormData();
+        formData.append('first_name', document.getElementById('editFirstName').value);
+        formData.append('last_name', document.getElementById('editLastName').value);
+        formData.append('email', email);
+        formData.append('employee_id', document.getElementById('editEmployeeId').value);
+        formData.append('username', resolvedUsername);
+        formData.append('work_start_time', document.getElementById('editWorkStart').value || '');
+        formData.append('work_end_time', document.getElementById('editWorkEnd').value || '');
+        formData.append('lunch_start_time', document.getElementById('editLunchStart').value || '');
+        formData.append('lunch_end_time', document.getElementById('editLunchEnd').value || '');
+        formData.append('is_active', document.getElementById('editIsActive').checked);
+        formData.append(
+            'is_superadmin',
+            document.getElementById('editSystemPermission').value === 'superadmin'
+        );
+
+        const profilePhoto = editProfilePhotoInput.files[0];
+        if (profilePhoto) {
+            formData.append('profile_photo', profilePhoto);
+        }
 
         try {
             const response = await fetch(`/api/employees/${id}/`, {
                 method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data)
+                body: formData
             });
 
             if (response.ok) {
+                if (newPassword) {
+                    const passwordResponse = await fetch(`/api/employees/${id}/set-password/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            new_password: newPassword,
+                            confirm_password: newPassword,
+                        }),
+                    });
+
+                    if (!passwordResponse.ok) {
+                        const passwordError = await passwordResponse.json();
+                        alertContainer.innerHTML = `<div class="alert alert-error"><i class="bi bi-exclamation-triangle"></i> Error al guardar contraseña: ${JSON.stringify(passwordError)}</div>`;
+                        return;
+                    }
+                }
+
                 alertContainer.innerHTML = '<div class="alert alert-success"><i class="bi bi-check-circle"></i> Empleado actualizado exitosamente</div>';
                 setTimeout(() => {
                     closeModal();
@@ -274,6 +515,111 @@
             }
         } catch (error) {
             alertContainer.innerHTML = `<div class="alert alert-error"><i class="bi bi-wifi-off"></i> Error de conexión</div>`;
+        }
+    });
+
+    editProfilePhotoInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (!file) {
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+            editProfilePhotoPreview.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+    });
+
+    faceStartCameraBtn.addEventListener('click', async () => {
+        try {
+            faceStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'user' }
+            });
+            faceVideo.srcObject = faceStream;
+            faceVideo.style.display = 'block';
+            faceCameraPlaceholder.style.display = 'none';
+
+            faceStartCameraBtn.classList.add('hidden');
+            faceCapturePhotoBtn.classList.remove('hidden');
+            faceRetakePhotoBtn.classList.add('hidden');
+        } catch (error) {
+            showFaceAlert('No se pudo acceder a la cámara', 'error');
+        }
+    });
+
+    faceCapturePhotoBtn.addEventListener('click', () => {
+        const context = faceCanvas.getContext('2d');
+        faceCanvas.width = faceVideo.videoWidth;
+        faceCanvas.height = faceVideo.videoHeight;
+        context.drawImage(faceVideo, 0, 0);
+
+        faceCanvas.toBlob((blob) => {
+            faceBlob = blob;
+            facePreview.src = faceCanvas.toDataURL('image/jpeg', 0.95);
+            facePreview.classList.remove('hidden');
+            faceVideo.style.display = 'none';
+
+            faceCapturePhotoBtn.classList.add('hidden');
+            faceRetakePhotoBtn.classList.remove('hidden');
+            faceSubmitBtn.disabled = false;
+            stopFaceStream();
+        }, 'image/jpeg', 0.95);
+    });
+
+    faceRetakePhotoBtn.addEventListener('click', async () => {
+        faceBlob = null;
+        facePreview.classList.add('hidden');
+        faceSubmitBtn.disabled = true;
+        faceRetakePhotoBtn.classList.add('hidden');
+        faceCapturePhotoBtn.classList.remove('hidden');
+        faceAlertContainer.innerHTML = '';
+
+        try {
+            faceStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'user' }
+            });
+            faceVideo.srcObject = faceStream;
+            faceVideo.style.display = 'block';
+        } catch (error) {
+            showFaceAlert('No se pudo reiniciar la cámara', 'error');
+        }
+    });
+
+    faceSubmitBtn.addEventListener('click', async () => {
+        const id = document.getElementById('faceEmployeeId').value;
+        if (!id || !faceBlob) {
+            showFaceAlert('Captura una foto antes de guardar', 'error');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('photo', faceBlob, 'face.jpg');
+
+        faceSubmitBtn.disabled = true;
+        faceSubmitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...';
+
+        try {
+            const response = await fetch(`/api/employees/${id}/register-face/`, {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                showFaceAlert('✅ Rostro registrado exitosamente', 'success');
+                setTimeout(() => {
+                    closeFaceModal();
+                    loadEmployees();
+                }, 1200);
+            } else {
+                showFaceAlert(`❌ Error: ${data.error || 'No se pudo registrar el rostro'}`, 'error');
+                faceSubmitBtn.disabled = false;
+                faceSubmitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Guardar Rostro';
+            }
+        } catch (error) {
+            showFaceAlert(`❌ Error de conexión: ${error.message}`, 'error');
+            faceSubmitBtn.disabled = false;
+            faceSubmitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Guardar Rostro';
         }
     });
 

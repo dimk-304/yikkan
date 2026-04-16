@@ -18,6 +18,7 @@ class Employee(models.Model):
     email = models.EmailField(unique=True)
     employee_id = models.CharField(max_length=20, unique=True)
     photo = models.ImageField(upload_to='employees/')
+    profile_photo = models.ImageField(upload_to='employees/profile/', null=True, blank=True)
     
     # Autenticación
     username = models.CharField(max_length=50, unique=True, null=True, blank=True)
@@ -41,6 +42,7 @@ class Employee(models.Model):
     
     # Estado
     is_active = models.BooleanField(default=True, help_text="Empleado activo")
+    is_superadmin = models.BooleanField(default=False, help_text="Permisos globales del sistema")
 
     def set_password(self, raw_password):
         """Hashea y guarda la contraseña"""
@@ -75,10 +77,14 @@ class Employee(models.Model):
     
     def can_manage(self, employee):
         """Verifica si puede gestionar a otro empleado"""
-        if self.role == 'ADMIN':
+        if self.is_superadmin or self.role == 'ADMIN':
             return True
         # Puede gestionar si es su supervisor directo o está en su cadena de supervisión
         return employee in self.get_all_subordinates()
+
+    def is_system_admin(self):
+        """Compatibilidad: admin legacy por rol o nuevo flag de permisos"""
+        return self.is_superadmin or self.role == 'ADMIN'
     
     def get_supervisor_chain(self):
         """Retorna la cadena de supervisores hasta el CEO"""

@@ -13,7 +13,7 @@ def feed_view(request):
     
     # Obtener el empleado actual
     employee_id = request.session.get('employee_id')
-    employee_role = request.session.get('employee_role')
+    is_superadmin = request.session.get('is_superadmin', False)
     current_employee = None
     if employee_id:
         try:
@@ -25,7 +25,7 @@ def feed_view(request):
         'posts': posts,
         'form': form,
         'current_employee': current_employee,
-        'employee_role': employee_role,
+        'is_superadmin': is_superadmin,
     })
 
 @login_required
@@ -56,12 +56,12 @@ def delete_post(request, post_id):
     
     # Obtener el empleado desde la sesión
     employee_id = request.session.get('employee_id')
-    employee_role = request.session.get('employee_role')
+    is_superadmin = request.session.get('is_superadmin', False)
     
     try:
         employee = Employee.objects.get(id=employee_id)
         # Solo el autor o un admin puede eliminar
-        if post.author == employee or employee_role == 'ADMIN':
+        if post.author == employee or is_superadmin:
             post.delete()
             messages.success(request, 'Publicación eliminada.')
         else:

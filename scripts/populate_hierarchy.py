@@ -47,12 +47,13 @@ def create_hierarchy():
 
     # 2. Crear Directores (Reportan al CEO)
     directors_data = [
-        ("Ana", "García", "DIR-001", "Operaciones"),
-        ("Carlos", "López", "DIR-002", "Tecnología"),
+        ("Ana", "García", "DIR-001", "Operaciones", "Director de Operaciones"),
+        ("Carlos", "López", "DIR-002", "Tecnología", "Director de Tecnología"),
+        ("Jose Luis", "Paz Razo", "DIR-003", "Dirección General", "Director General Adjunto"),
     ]
 
     directors = []
-    for first, last, emp_id, dept in directors_data:
+    for first, last, emp_id, dept, position in directors_data:
         dir_obj, created = Employee.objects.get_or_create(
             employee_id=emp_id,
             defaults={
@@ -60,7 +61,7 @@ def create_hierarchy():
                 "last_name": last,
                 "email": f"{first.lower()}.{last.lower()}@uz.com",
                 "role": "DIRECTOR",
-                "position": f"Director de {dept}",
+                "position": position,
                 "department": dept,
                 "supervisor": ceo,
                 "username": f"dir.{first.lower()}",
@@ -72,6 +73,33 @@ def create_hierarchy():
             dir_obj.save()
             print(f"  ✅ Director creado: {dir_obj} (Supervisor: {ceo.first_name})")
         directors.append(dir_obj)
+
+    # Alta explicita: Gerente de TI
+    tech_director = next((d for d in directors if d.employee_id == "DIR-002"), None)
+    if tech_director:
+        it_manager, created = Employee.objects.get_or_create(
+            employee_id="MGR-IT-001",
+            defaults={
+                "first_name": "Joaquin Elias",
+                "last_name": "Morales Valladares",
+                "email": "joaquin.elias.morales.valladares@uz.com",
+                "role": "MANAGER",
+                "position": "Gerente de TI",
+                "department": "Tecnología",
+                "supervisor": tech_director,
+                "username": "mgr.joaquinelias",
+                "is_active": True,
+            },
+        )
+        if created:
+            it_manager.set_password(default_password)
+            it_manager.save()
+            print(
+                f"    ✅ Gerente de TI creado: {it_manager} "
+                f"(Supervisor: {tech_director.first_name})"
+            )
+    else:
+        print("⚠️ No se encontró director de Tecnología para asignar Gerente de TI.")
 
     # 3. Crear Gerentes (Reportan a Directores)
     managers = []

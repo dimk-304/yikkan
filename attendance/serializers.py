@@ -1,10 +1,23 @@
 from rest_framework import serializers
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from .models import Employee, AttendanceLog, Incident, LeaveRequest
+
+
+def _validate_strong_password(password: str):
+    """Valida contraseña con las reglas de seguridad de Django."""
+    try:
+        validate_password(password)
+    except DjangoValidationError as exc:
+        raise serializers.ValidationError({'new_password': list(exc.messages)})
 
 class EmployeeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employee
-        fields = ['id', 'first_name', 'last_name', 'email', 'employee_id', 'photo', 'created_at', 'role']
+        fields = [
+            'id', 'first_name', 'last_name', 'email', 'employee_id',
+            'photo', 'profile_photo', 'created_at', 'role', 'is_superadmin'
+        ]
         read_only_fields = ['created_at']
 
 class EmployeeDetailSerializer(serializers.ModelSerializer):
@@ -13,8 +26,8 @@ class EmployeeDetailSerializer(serializers.ModelSerializer):
         model = Employee
         fields = [
             'id', 'first_name', 'last_name', 'email', 'employee_id', 
-            'photo', 'created_at', 'work_start_time', 'work_end_time',
-            'lunch_start_time', 'lunch_end_time', 'is_active', 'role', 'username'
+            'photo', 'profile_photo', 'created_at', 'work_start_time', 'work_end_time',
+            'lunch_start_time', 'lunch_end_time', 'is_active', 'role', 'username', 'is_superadmin'
         ]
         read_only_fields = ['created_at']
 
@@ -26,7 +39,7 @@ class EmployeeListSerializer(serializers.ModelSerializer):
         model = Employee
         fields = [
             'id', 'first_name', 'last_name', 'email', 'employee_id',
-            'work_start_time', 'work_end_time', 'is_active', 'total_logs', 'role'
+            'work_start_time', 'work_end_time', 'is_active', 'total_logs', 'role', 'is_superadmin', 'profile_photo'
         ]
     
     def get_total_logs(self, obj):
@@ -112,10 +125,10 @@ class EmployeeHierarchySerializer(serializers.ModelSerializer):
         model = Employee
         fields = [
             'id', 'first_name', 'last_name', 'email', 'employee_id',
-            'photo', 'role', 'role_display', 'supervisor', 'supervisor_name', 
+            'photo', 'profile_photo', 'role', 'role_display', 'supervisor', 'supervisor_name', 
             'supervisor_id', 'department', 'position', 'username',
             'work_start_time', 'work_end_time', 'lunch_start_time', 
-            'lunch_end_time', 'is_active', 'created_at', 'subordinates_count',
+            'lunch_end_time', 'is_active', 'is_superadmin', 'created_at', 'subordinates_count',
             'hierarchy_level'
         ]
         read_only_fields = ['created_at', 'subordinates_count', 'hierarchy_level']
@@ -139,9 +152,9 @@ class EmployeeCreateUpdateSerializer(serializers.ModelSerializer):
         model = Employee
         fields = [
             'id', 'first_name', 'last_name', 'email', 'employee_id',
-            'photo', 'role', 'supervisor', 'department', 'position',
+            'photo', 'profile_photo', 'role', 'supervisor', 'department', 'position',
             'username', 'password_raw', 'work_start_time', 'work_end_time',
-            'lunch_start_time', 'lunch_end_time', 'is_active'
+            'lunch_start_time', 'lunch_end_time', 'is_active', 'is_superadmin'
         ]
     
     def validate(self, data):
@@ -159,7 +172,7 @@ class EmployeeCreateUpdateSerializer(serializers.ModelSerializer):
         if supervisor and role:
             employee_level = {'CEO': 0, 'DIRECTOR': 1, 'MANAGER': 2, 'OPERATOR': 3, 'EMPLOYEE': 4, 'ADMIN': -1}
             if employee_level.get(role, 999) <= employee_level.get(supervisor.role, 999):
-                if supervisor.role != 'ADMIN':  # Admin puede supervisar a cualquiera
+                if not supervisor.is_system_admin():
                     raise serializers.ValidationError({
                         'supervisor': f'El supervisor debe tener un rol superior. No puede ser {supervisor.get_role_display()}'
                     })
@@ -183,6 +196,7 @@ class EmployeeCreateUpdateSerializer(serializers.ModelSerializer):
         employee = Employee.objects.create(**validated_data)
         
         if password_raw:
+            _validate_strong_password(password_raw)
             employee.set_password(password_raw)
             employee.save()
         
@@ -195,6 +209,7 @@ class EmployeeCreateUpdateSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         
         if password_raw:
+            _validate_strong_password(password_raw)
             instance.set_password(password_raw)
         
         instance.save()
@@ -202,7 +217,7 @@ class EmployeeCreateUpdateSerializer(serializers.ModelSerializer):
 
 class EmployeePasswordSerializer(serializers.Serializer):
     """Serializer para cambio de contraseña"""
-    new_password = serializers.CharField(write_only=True, min_length=4)
+    new_password = serializers.CharField(write_only=True)
     confirm_password = serializers.CharField(write_only=True)
     
     def validate(self, data):
@@ -210,6 +225,7 @@ class EmployeePasswordSerializer(serializers.Serializer):
             raise serializers.ValidationError({
                 'confirm_password': 'Las contraseñas no coinciden'
             })
+        _validate_strong_password(data['new_password'])
         return data
 
 class SubordinateSerializer(serializers.ModelSerializer):

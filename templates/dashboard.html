@@ -116,7 +116,8 @@
             const response = await fetch('/api/me/');
             if (response.ok) {
                 const user = await response.json();
-                document.getElementById('userName').textContent = `${user.first_name} ${user.last_name} (${user.role === 'ADMIN' ? 'Administrador' : 'Empleado'})`;
+                const accessLabel = user.is_superadmin ? 'Super Administrador' : user.role;
+                document.getElementById('userName').textContent = `${user.first_name} ${user.last_name} (${accessLabel})`;
             } else {
                 window.location.href = '/login';
             }

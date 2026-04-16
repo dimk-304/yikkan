@@ -82,7 +82,7 @@
                     </div>
                 </div>
 
-                {% if current_employee and (post.author == current_employee or employee_role == 'ADMIN') %}
+                {% if current_employee and (post.author == current_employee or is_superadmin) %}
                 <form method="post" action="{% url 'networking:delete' post.id %}" style="display: inline;"
                     onsubmit="return confirm('¿Estás seguro de eliminar esta publicación?');">
                     {% csrf_token %}

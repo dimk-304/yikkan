@@ -14,7 +14,8 @@ def login_view(request):
     # Si ya está logueado, redirigir según rol
     if request.session.get('employee_id'):
         role = request.session.get('employee_role')
-        if role == 'ADMIN':
+        is_superadmin = request.session.get('is_superadmin', False)
+        if is_superadmin:
             return redirect('/dashboard')
         elif role == 'EMPLOYEE':
             return redirect('/employee-panel')
@@ -42,6 +43,7 @@ class LoginView(views.APIView):
                 # Guardar en sesión
                 request.session['employee_id'] = employee.id
                 request.session['employee_role'] = employee.role
+                request.session['is_superadmin'] = employee.is_system_admin()
                 
                 return Response({
                     'success': True,
@@ -49,9 +51,10 @@ class LoginView(views.APIView):
                         'id': employee.id,
                         'name': f"{employee.first_name} {employee.last_name}",
                         'role': employee.role,
+                        'is_superadmin': employee.is_system_admin(),
                         'email': employee.email
                     },
-                    'redirect': '/dashboard' if employee.role == 'ADMIN' else '/employee-panel'
+                    'redirect': '/dashboard' if employee.is_system_admin() else '/employee-panel'
                 })
             else:
                 return Response({'error': 'Credenciales inválidas'}, status=status.HTTP_401_UNAUTHORIZED)
