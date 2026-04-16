@@ -1,0 +1,13 @@
+---
+description: Convenciones generales del proyecto Yikkan
+alwaysApply: true
+---
+
+# Convenciones del proyecto
+
+- Responder y documentar en espanol; codigo y nombres tecnicos en ingles.
+- Mantener `Dockerfile` unico en raiz. No crear `Dockerfile.prod` de nuevo.
+- Usar `docker-compose.dev.yml` para desarrollo y `docker-compose.prod.yml` para produccion.
+- No introducir frameworks frontend nuevos sin solicitud explicita (mantener Django templates + DRF).
+- Antes de borrar archivos, confirmar que no esten referenciados por configuracion activa.
+- En cambios de deploy, mantener sincronizados `fly.toml`, Compose y variables de entorno.

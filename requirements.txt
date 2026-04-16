@@ -1,9 +1,12 @@
 Django>=4.2
+dj-database-url>=2.1
+whitenoise>=6.6
 psycopg2-binary
 djangorestframework
 face-recognition
 face-recognition-models
 numpy
-setuptools
+# setuptools>=82 ya no incluye pkg_resources (lo usa face_recognition_models)
+setuptools>=70,<82
 gunicorn
 python-dotenv

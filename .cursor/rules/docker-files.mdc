@@ -1,0 +1,13 @@
+---
+description: Reglas para cambios en Docker Compose y Fly
+globs: "{Dockerfile,fly.toml,docker-compose*.yml,.env.prod.example}"
+alwaysApply: false
+---
+
+# Reglas de infraestructura
+
+- Al cambiar puertos en dev, documentar el impacto en `README.md`.
+- Evitar prompts interactivos en entornos CI/CD o Fly.
+- Mantener `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` consistentes entre compose/env/settings.
+- Verificar que `fly.toml` apunte al `Dockerfile` correcto y puerto interno 8000.
+- No duplicar configuraciones; preferir una sola fuente de verdad por entorno.

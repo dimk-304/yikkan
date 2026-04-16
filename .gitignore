@@ -6,6 +6,7 @@ __pycache__/
 .Python
 env/
 venv/
+.venv/
 .env
 .env.prod
 .coverage
@@ -23,6 +24,9 @@ media/
 # IDE
 .vscode/
 .idea/
+node_modules/
+test-results/
+playwright-report/
 
 # OS
 .DS_Store

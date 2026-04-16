@@ -1,0 +1,25 @@
+{
+  "name": "yikkan",
+  "version": "1.0.0",
+  "description": "Sistema de control de asistencia con Django + DRF + PostgreSQL + reconocimiento facial.",
+  "main": "index.js",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dimk-304/yikkan.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/dimk-304/yikkan/issues"
+  },
+  "homepage": "https://github.com/dimk-304/yikkan#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.59.1"
+  }
+}

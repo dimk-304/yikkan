@@ -1,10 +1,8 @@
-version: '3.8'
-
 services:
   web:
     build:
       context: .
-      dockerfile: Dockerfile.prod
+      dockerfile: Dockerfile
     command: gunicorn uz_checkpoint.wsgi:application --bind 0.0.0.0:8000
     volumes:
       - static_volume:/app/static
@@ -15,7 +13,7 @@ services:
       - db
 
   db:
-    image: postgres:13
+    image: postgres:17
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     env_file:
